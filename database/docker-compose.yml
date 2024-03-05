@@ -1,13 +1,11 @@
 version: '3.8'
 services:
-  database:
+  wegonice-db:
     image: 'mongo:7'
     container_name: 'wegonice-db'
     env_file:
       - ../.env
     volumes:
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
       - ./db-data:/data/db
     ports:
       - '27017-27019:27017-27019'
-  

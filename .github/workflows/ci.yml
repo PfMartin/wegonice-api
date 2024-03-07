@@ -19,6 +19,27 @@ env:
   MONGO_INITDB_DATABASE: "wegonice"
 
 jobs:
+  static-checks:
+    name: static-checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{env.GO_VERSION}}
+      
+      - name: go vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.54
+
   test-server:
     name: test-server
     runs-on: ubuntu-latest
@@ -48,9 +69,25 @@ jobs:
           docker exec mongodb mongosh ${{env.WEGONICE_DB}} -u ${{env.MONGO_INIT_ROOT_USERNAME}} -p ${{env.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase admin --eval "db.createUser({user: '${{env.WEGONICE_USER}}', pwd: '${{env.WEGONICE_PWD}}', roles: [{role: 'readWrite', db: '${{env.WEGONICE_DB}}'}]})"
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
       
       - name: Run Tests
         run: go test -v ./...
+
+  build-server:
+    runs-on: ubuntu-latest
+    needs: test-server
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{env.GO_VERSION}}
+      
+      - name: Build binary
+        run: go build .

@@ -1,0 +1,55 @@
+name: test
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - main
+
+env:
+  GO_VERSION: 1.22
+  WEGONICE_URI: mongodb://localhost:27017
+  WEGONICE_DB: wegonice
+  WEGONICE_USER: niceUser
+  WEGONICE_PWD: nicePassword
+  MONGO_INIT_ROOT_USERNAME: niceUser
+  MONGO_INITDB_ROOT_PASSWORD: nicePassword
+  MONGO_INITDB_DATABASE: "wegonice"
+
+jobs:
+  test-server:
+    name: test-server
+    runs-on: ubuntu-latest
+
+    services:
+      wegonice-db:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{env.MONGO_INIT_ROOT_USERNAME}}
+          MONGO_INITDB_ROOT_PASSWORD: ${{env.MONGO_INITDB_ROOT_PASSWORD}}
+          MONGO_INITDB_DATABASE: ${{env.MONGO_INITDB_DATABASE}}
+        ports:
+          - 27017-27019:27017-27019
+        options: >-
+          --health-cmd "echo 'db.runCommand("ping").ok' | mongosh --quiet"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 5
+          --name mongodb
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Database user
+        run: make db-create-user
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{env.GO_VERSION}}
+      
+      - name: Run Tests
+        run: go test -v ./...

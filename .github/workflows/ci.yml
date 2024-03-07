@@ -44,7 +44,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Database user
-        run: make db-create-user
+        run: |
+          docker exec mongodb mongosh ${{env.WEGONICE_DB}} -u ${{env.MONGO_INIT_ROOT_USERNAME}} -p ${{env.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase admin --eval "db.createUser({user: '${{env.WEGONICE_USER}}', pwd: '${{env.WEGONICE_PWD}}', roles: [{role: 'readWrite', db: '${{env.WEGONICE_DB}}'}]})"
 
       - name: Set up Go
         uses: actions/setup-go@v4

@@ -8,11 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateUser(t *testing.T) {
+func createRandomUser(t *testing.T) {
 	conf := getDatabaseConfiguration(t)
 
-	dbClient, cancel := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	defer cancel()
+	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 	require.NotNil(t, dbClient)
 
 	user := User{
@@ -25,10 +24,13 @@ func TestCreateUser(t *testing.T) {
 
 	handler := NewUsersHandler(dbClient, conf.DBName)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 	insertedId, err := handler.CreateUser(ctx, user)
 
 	require.NoError(t, err)
 	require.False(t, insertedId.IsZero())
-	cancel()
+}
+
+func TestCreateUser(t *testing.T) {
+	createRandomUser(t)
 }

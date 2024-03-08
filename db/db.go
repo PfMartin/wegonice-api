@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func NewDatabase(authSource string, username string, password string, uri string) (*mongo.Client, context.CancelFunc) {
+func NewDatabaseClient(authSource string, username string, password string, uri string) (*mongo.Client, context.CancelFunc) {
 	credentials := options.Credential{
 		AuthSource: authSource,
 		Username:   username,
@@ -33,5 +33,6 @@ func NewDatabase(authSource string, username string, password string, uri string
 	}
 
 	log.Info().Msg("Connected to database")
+
 	return dbClient, cancel
 }

@@ -31,6 +31,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, cancel := db.NewDatabase(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
+	dbClient, cancel := db.NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
+	_ = db.NewUsersHandler(dbClient, conf.DBName)
+
+	// TODO: Create Server and add all the db handlers as property
+
 	defer cancel()
 }

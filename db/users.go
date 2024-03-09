@@ -10,25 +10,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type CollectionHandler struct {
+type UserCollection struct {
 	collection *mongo.Collection
 }
 
-func NewUsersHandler(dbClient *mongo.Client, dbName string) *CollectionHandler {
+func NewUserCollection(dbClient *mongo.Client, dbName string) *UserCollection {
 	collection := dbClient.Database(dbName).Collection("users")
 
-	return &CollectionHandler{
+	return &UserCollection{
 		collection,
 	}
 }
 
-func (handler *CollectionHandler) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
+func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
 	insertData := bson.M{
 		"email":      user.Email,
 		"password":   user.Password,
 		"role":       user.Role,
-		"createdAt":  user.CreatedAt,
-		"modifiedAt": user.ModifiedAt,
+		"createdAt":  time.Now().UnixMilli(),
+		"modifiedAt": time.Now().UnixMilli(),
 	}
 
 	cursor, err := handler.collection.InsertOne(ctx, insertData)
@@ -36,12 +36,12 @@ func (handler *CollectionHandler) CreateUser(ctx context.Context, user User) (pr
 		return primitive.NilObjectID, err
 	}
 
-	userId := cursor.InsertedID.(primitive.ObjectID)
+	userID := cursor.InsertedID.(primitive.ObjectID)
 
-	return userId, nil
+	return userID, nil
 }
 
-func (handler *CollectionHandler) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
+func (handler *UserCollection) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
 	var users []User
 
 	findOptions := pagination.getFindOptions()
@@ -61,7 +61,7 @@ func (handler *CollectionHandler) GetAllUsers(ctx context.Context, pagination Pa
 	return users, nil
 }
 
-func (handler *CollectionHandler) GetUserByID(ctx context.Context, userID string) (User, error) {
+func (handler *UserCollection) GetUserByID(ctx context.Context, userID string) (User, error) {
 	var user User
 
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
@@ -82,7 +82,7 @@ func (handler *CollectionHandler) GetUserByID(ctx context.Context, userID string
 	return user, nil
 }
 
-func (handler *CollectionHandler) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
+func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
@@ -121,7 +121,7 @@ func (handler *CollectionHandler) UpdateUserByID(ctx context.Context, userID str
 	return modifiedCount, err
 }
 
-func (handler *CollectionHandler) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
+func (handler *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)

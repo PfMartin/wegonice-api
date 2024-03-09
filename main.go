@@ -32,7 +32,8 @@ func main() {
 	}
 
 	dbClient, cancel := db.NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	_ = db.NewUsersHandler(dbClient, conf.DBName)
+	_ = db.NewUserCollection(dbClient, conf.DBName)
+	_ = db.NewAuthorCollection(dbClient, conf.DBName)
 
 	// TODO: Create Server and add all the db handlers as property
 

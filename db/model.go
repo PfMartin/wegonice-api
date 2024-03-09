@@ -1,6 +1,8 @@
 package db
 
-import "go.mongodb.org/mongo-driver/mongo/options"
+import (
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
 
 type Pagination struct {
 	PageID   int64 `form:"page_id" json:"page_id" binding:"min=1"`
@@ -23,10 +25,26 @@ const (
 )
 
 type User struct {
-	ID         string `json:"id" bson:"_id"`
-	Email      string `json:"email" bson:"email"`
-	Password   string `json:"password" bson:"password"`
-	Role       Role   `json:"role" bson:"role"`
-	CreatedAt  int64  `json:"createdAt" bson:"createdAt"`
-	ModifiedAt int64  `json:"modifiedAt" bson:"modifiedAt"`
+	ID         string `bson:"_id" json:"id"`
+	Email      string `bson:"email" json:"email" binding:"required"`
+	Password   string `bson:"password" json:"password" binding:"required"`
+	Role       Role   `bson:"role" json:"role,omitempty"`
+	CreatedAt  int64  `bson:"createdAt" json:"createdAt,omitempty"`
+	ModifiedAt int64  `bson:"modifiedAt" json:"modifiedAt,omitempty"`
+}
+
+type Author struct {
+	ID           string `bson:"_id" json:"id"`
+	FirstName    string `bson:"firstName" json:"firstName,omitempty"`
+	LastName     string `bson:"lastName" json:"lastName,omitempty"`
+	Name         string `bson:"name" json:"name" binding:"required"`
+	WebsiteURL   string `bson:"website" json:"website,omitempty"`
+	InstagramURL string `bson:"instagram" json:"instagram,omitempty"`
+	YouTubeURL   string `bson:"youTube" json:"youTube,omitempty"`
+	ImageBase64  string `bson:"imageBase64" json:"imageBase64,omitempty"`
+	RecipeCount  int    `bson:"recipeCount" json:"recipeCount,omitempty"`
+	UserID       string `bson:"userId" json:"userId,omitempty"`
+	UserCreated  User   `bson:"userCreated" json:"userCreated"`
+	CreatedAt    int64  `bson:"createdAt" json:"createdAt"`
+	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt"`
 }

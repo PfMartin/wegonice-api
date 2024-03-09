@@ -10,18 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getUsersHandler(t *testing.T) *CollectionHandler {
+func getUserCollection(t *testing.T) *UserCollection {
 	conf := getDatabaseConfiguration(t)
 
 	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 	require.NotNil(t, dbClient)
 
-	handler := NewUsersHandler(dbClient, conf.DBName)
+	coll := NewUserCollection(dbClient, conf.DBName)
 
-	return handler
+	return coll
 }
 
-func createRandomUser(t *testing.T, handler *CollectionHandler) User {
+func createRandomUser(t *testing.T, coll *UserCollection) User {
 	user := User{
 		Email:      util.RandomEmail(),
 		Password:   util.RandomString(6),
@@ -31,7 +31,7 @@ func createRandomUser(t *testing.T, handler *CollectionHandler) User {
 	}
 
 	ctx := context.Background()
-	insertedID, err := handler.CreateUser(ctx, user)
+	insertedID, err := coll.CreateUser(ctx, user)
 
 	require.NoError(t, err)
 	require.False(t, insertedID.IsZero())
@@ -49,18 +49,18 @@ func createRandomUser(t *testing.T, handler *CollectionHandler) User {
 }
 
 func TestCreateUser(t *testing.T) {
-	handler := getUsersHandler(t)
+	coll := getUserCollection(t)
 
 	t.Run("Creates a new user", func(t *testing.T) {
-		_ = createRandomUser(t, handler)
+		_ = createRandomUser(t, coll)
 	})
 }
 
 func TestGetAllUsers(t *testing.T) {
-	handler := getUsersHandler(t)
+	coll := getUserCollection(t)
 
 	for i := 0; i < 7; i++ {
-		_ = createRandomUser(t, handler)
+		_ = createRandomUser(t, coll)
 	}
 
 	pagination := Pagination{
@@ -70,7 +70,7 @@ func TestGetAllUsers(t *testing.T) {
 
 	t.Run("Gets all users with pagination", func(t *testing.T) {
 		ctx := context.Background()
-		users, err := handler.GetAllUsers(ctx, pagination)
+		users, err := coll.GetAllUsers(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, users)
 
@@ -79,9 +79,9 @@ func TestGetAllUsers(t *testing.T) {
 }
 
 func TestGetUserByID(t *testing.T) {
-	handler := getUsersHandler(t)
+	coll := getUserCollection(t)
 
-	createdUser := createRandomUser(t, handler)
+	createdUser := createRandomUser(t, coll)
 
 	testCases := []struct {
 		name         string
@@ -109,7 +109,7 @@ func TestGetUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotUser, err := handler.GetUserByID(context.Background(), tc.userID)
+			gotUser, err := coll.GetUserByID(context.Background(), tc.userID)
 
 			fmt.Println(gotUser)
 
@@ -125,9 +125,9 @@ func TestGetUserByID(t *testing.T) {
 }
 
 func TestUpdateUserByID(t *testing.T) {
-	handler := getUsersHandler(t)
+	coll := getUserCollection(t)
 
-	createdUser := createRandomUser(t, handler)
+	createdUser := createRandomUser(t, coll)
 
 	userUpdate := User{
 		Email:    util.RandomEmail(),
@@ -164,7 +164,7 @@ func TestUpdateUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			modifiedCount, err := handler.UpdateUserByID(context.Background(), tc.userID, tc.userUpdate)
+			modifiedCount, err := coll.UpdateUserByID(context.Background(), tc.userID, tc.userUpdate)
 			require.Equal(t, tc.modifiedCount, modifiedCount)
 
 			if tc.hasError {
@@ -178,7 +178,7 @@ func TestUpdateUserByID(t *testing.T) {
 				return
 			}
 
-			updatedUser, err := handler.GetUserByID(context.Background(), tc.userID)
+			updatedUser, err := coll.GetUserByID(context.Background(), tc.userID)
 			require.NoError(t, err)
 
 			expectedUser := User{
@@ -201,9 +201,9 @@ func TestUpdateUserByID(t *testing.T) {
 }
 
 func TestDeleteUserByID(t *testing.T) {
-	handler := getUsersHandler(t)
+	coll := getUserCollection(t)
 
-	createdUser := createRandomUser(t, handler)
+	createdUser := createRandomUser(t, coll)
 
 	testCases := []struct {
 		name        string
@@ -233,7 +233,7 @@ func TestDeleteUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			deleteCount, err := handler.DeleteUserByID(context.Background(), tc.userID)
+			deleteCount, err := coll.DeleteUserByID(context.Background(), tc.userID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 
 			if tc.hasError {

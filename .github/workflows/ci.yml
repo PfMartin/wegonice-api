@@ -16,7 +16,7 @@ env:
   WEGONICE_PWD: nicePassword
   MONGO_INIT_ROOT_USERNAME: niceUser
   MONGO_INITDB_ROOT_PASSWORD: nicePassword
-  MONGO_INITDB_DATABASE: "wegonice"
+  MONGO_INITDB_DATABASE: wegonice
 
 jobs:
   static-checks:

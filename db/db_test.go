@@ -17,7 +17,7 @@ func getDatabaseConfiguration(t *testing.T) config.Config {
 	}
 
 	if conf.DBName == "" || conf.DBUser == "" || conf.DBPassword == "" || conf.DBURI == "" {
-		viperConf, err := config.NewConfig("./", "test.env")
+		viperConf, err := config.NewConfig("../", ".env")
 		require.NoError(t, err)
 
 		conf = viperConf

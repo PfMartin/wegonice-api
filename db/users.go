@@ -82,7 +82,6 @@ func (handler *CollectionHandler) GetUserByID(ctx context.Context, userID string
 	return user, nil
 }
 
-// TODO: Make this a patch method
 func (handler *CollectionHandler) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {

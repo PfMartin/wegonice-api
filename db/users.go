@@ -10,15 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type User struct {
-	ID         string `json:"id" bson:"_id"`
-	Email      string `json:"email" bson:"email"`
-	Password   string `json:"password" bson:"password"`
-	Role       string `json:"role" bson:"role"`
-	CreatedAt  int64  `json:"createdAt" bson:"createdAt"`
-	ModifiedAt int64  `json:"modifiedAt" bson:"modifiedAt"`
-}
-
 type CollectionHandler struct {
 	collection *mongo.Collection
 }
@@ -50,10 +41,13 @@ func (handler *CollectionHandler) CreateUser(ctx context.Context, user User) (pr
 	return userId, nil
 }
 
-func (handler *CollectionHandler) GetAllUsers(ctx context.Context) ([]User, error) {
+func (handler *CollectionHandler) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
 	var users []User
 
-	cursor, err := handler.collection.Find(ctx, bson.M{})
+	findOptions := pagination.getFindOptions()
+	findOptions.SetSort(bson.M{"email": 1})
+
+	cursor, err := handler.collection.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
 		log.Err(err).Msg("failed to find user documents")
 		return users, err
@@ -82,7 +76,7 @@ func (handler *CollectionHandler) GetUserByID(ctx context.Context, userID string
 
 	if err = handler.collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		log.Err(err).Msgf("failed to find user with userID %s", userID)
-		return user, nil
+		return user, err
 	}
 
 	return user, nil
@@ -101,7 +95,7 @@ func (handler *CollectionHandler) UpdateUserByID(ctx context.Context, userID str
 	}
 
 	update := bson.M{
-		"$set": bson.M{"modified_at": time.Now().Unix()},
+		"$set": bson.M{"modifiedAt": time.Now().UnixMilli() - 1000},
 	}
 	if userUpdate.Email != "" {
 		update["$set"].(bson.M)["email"] = userUpdate.Email

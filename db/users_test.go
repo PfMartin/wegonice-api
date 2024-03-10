@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -26,8 +25,8 @@ func createRandomUser(t *testing.T, coll *UserCollection) User {
 		Email:      util.RandomEmail(),
 		Password:   util.RandomString(6),
 		Role:       UserRole,
-		CreatedAt:  time.Now().UnixMilli(),
-		ModifiedAt: time.Now().UnixMilli(),
+		CreatedAt:  time.Now().Unix(),
+		ModifiedAt: time.Now().Unix(),
 	}
 
 	ctx := context.Background()
@@ -114,8 +113,6 @@ func TestGetUserByID(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			gotUser, err := coll.GetUserByID(context.Background(), tc.userID)
 
-			fmt.Println(gotUser)
-
 			if tc.hasError {
 				require.Error(t, err)
 				return
@@ -190,15 +187,15 @@ func TestUpdateUserByID(t *testing.T) {
 				Password:   userUpdate.Password,
 				Role:       createdUser.Role,
 				CreatedAt:  createdUser.CreatedAt,
-				ModifiedAt: time.Now().UnixMilli(),
+				ModifiedAt: time.Now().Unix(),
 			}
 
 			require.Equal(t, expectedUser.ID, updatedUser.ID)
 			require.Equal(t, expectedUser.Email, updatedUser.Email)
 			require.Equal(t, expectedUser.Password, updatedUser.Password)
 			require.Equal(t, expectedUser.Role, updatedUser.Role)
-			require.Equal(t, expectedUser.CreatedAt, updatedUser.CreatedAt)
-			require.True(t, expectedUser.ModifiedAt <= updatedUser.ModifiedAt+100 || expectedUser.ModifiedAt >= updatedUser.ModifiedAt-100)
+			require.WithinDuration(t, time.Unix(expectedUser.CreatedAt, 0), time.Unix(updatedUser.CreatedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedUser.ModifiedAt, 0), time.Unix(updatedUser.ModifiedAt, 0), 1*time.Second)
 		})
 	}
 }

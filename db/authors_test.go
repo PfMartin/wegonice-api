@@ -27,7 +27,7 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 		Name:         util.RandomString(6),
 		WebsiteURL:   util.RandomString(10),
 		InstagramURL: util.RandomString(10),
-		YouTubeURL:   util.RandomString(10),
+		YoutubeURL:   util.RandomString(10),
 		ImageBase64:  util.RandomString(10),
 		UserID:       userID,
 	}
@@ -45,11 +45,11 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 		Name:         author.Name,
 		WebsiteURL:   author.WebsiteURL,
 		InstagramURL: author.InstagramURL,
-		YouTubeURL:   author.YouTubeURL,
+		YoutubeURL:   author.YoutubeURL,
 		ImageBase64:  author.ImageBase64,
 		UserID:       author.UserID,
-		CreatedAt:    time.Now().UnixMilli(),
-		ModifiedAt:   time.Now().UnixMilli(),
+		CreatedAt:    time.Now().Unix(),
+		ModifiedAt:   time.Now().Unix(),
 	}
 }
 
@@ -85,4 +85,185 @@ func TestGetAllAuthors(t *testing.T) {
 
 		require.Equal(t, int(pagination.PageSize), len(authors))
 	})
+}
+
+func TestGetAuthorByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	authorColl := getAuthorCollection(t)
+	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+
+	testCases := []struct {
+		name           string
+		authorID       string
+		hasError       bool
+		expectedAuthor Author
+	}{
+		{
+			name:           "Success",
+			authorID:       createdAuthor.ID,
+			hasError:       false,
+			expectedAuthor: createdAuthor,
+		},
+		{
+			name:     "Fail with invalid authorID",
+			authorID: "test",
+			hasError: true,
+		},
+		{
+			name:     "Fail with authorID not found",
+			authorID: "659c00751f717854f690270d",
+			hasError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotAuthor, err := authorColl.GetAuthorByID(context.Background(), tc.authorID)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedAuthor, gotAuthor)
+		})
+	}
+}
+
+func TestUpdateAuthorByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	authorColl := getAuthorCollection(t)
+	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+
+	authorUpdate := Author{
+		Name:         util.RandomString(4),
+		LastName:     util.RandomString(6),
+		FirstName:    util.RandomString(6),
+		WebsiteURL:   util.RandomString(6),
+		InstagramURL: util.RandomString(6),
+		YoutubeURL:   util.RandomString(6),
+		ImageBase64:  util.RandomString(10),
+	}
+
+	testCases := []struct {
+		name          string
+		authorID      string
+		authorUpdate  Author
+		hasError      bool
+		modifiedCount int64
+	}{
+		{
+			name:          "Success",
+			authorID:      createdAuthor.ID,
+			authorUpdate:  authorUpdate,
+			hasError:      false,
+			modifiedCount: 1,
+		},
+		{
+			name:          "Fail with invalid authorID",
+			authorID:      "test",
+			hasError:      true,
+			modifiedCount: 0,
+		},
+		{
+			name:          "Fail with authorID not found",
+			authorID:      "659c00751f717854f690270d",
+			hasError:      false,
+			modifiedCount: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			modifiedCount, err := authorColl.UpdateAuthorByID(context.Background(), tc.authorID, tc.authorUpdate)
+			require.Equal(t, tc.modifiedCount, modifiedCount)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			if modifiedCount < 1 {
+				return
+			}
+
+			updatedAuthor, err := authorColl.GetAuthorByID(context.Background(), tc.authorID)
+			require.NoError(t, err)
+
+			expectedAuthor := Author{
+				ID:           createdAuthor.ID,
+				Name:         authorUpdate.Name,
+				LastName:     authorUpdate.LastName,
+				FirstName:    authorUpdate.FirstName,
+				WebsiteURL:   authorUpdate.WebsiteURL,
+				InstagramURL: authorUpdate.InstagramURL,
+				YoutubeURL:   authorUpdate.YoutubeURL,
+				ImageBase64:  authorUpdate.ImageBase64,
+				CreatedAt:    createdAuthor.CreatedAt,
+				ModifiedAt:   time.Now().Unix(),
+			}
+
+			require.Equal(t, expectedAuthor.ID, updatedAuthor.ID)
+			require.Equal(t, expectedAuthor.Name, updatedAuthor.Name)
+			require.Equal(t, expectedAuthor.LastName, updatedAuthor.LastName)
+			require.Equal(t, expectedAuthor.FirstName, updatedAuthor.FirstName)
+			require.Equal(t, expectedAuthor.WebsiteURL, updatedAuthor.WebsiteURL)
+			require.Equal(t, expectedAuthor.InstagramURL, updatedAuthor.InstagramURL)
+			require.Equal(t, expectedAuthor.YoutubeURL, updatedAuthor.YoutubeURL)
+			require.Equal(t, expectedAuthor.ImageBase64, updatedAuthor.ImageBase64)
+			require.WithinDuration(t, time.Unix(expectedAuthor.CreatedAt, 0), time.Unix(updatedAuthor.CreatedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedAuthor.ModifiedAt, 0), time.Unix(updatedAuthor.ModifiedAt, 0), 1*time.Second)
+		})
+	}
+}
+
+func TestDeleteAuthorByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	authorColl := getAuthorCollection(t)
+	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+
+	testCases := []struct {
+		name        string
+		authorID    string
+		hasError    bool
+		deleteCount int64
+	}{
+		{
+			name:        "Success",
+			authorID:    createdAuthor.ID,
+			hasError:    false,
+			deleteCount: 1,
+		},
+		{
+			name:        "Fail with invalid authorID",
+			authorID:    "test",
+			hasError:    true,
+			deleteCount: 0,
+		},
+		{
+			name:        "Fail with authorID not found",
+			authorID:    "659c00751f717854f690270d",
+			hasError:    false,
+			deleteCount: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			deleteCount, err := authorColl.DeleteAuthorByID(context.Background(), tc.authorID)
+			require.Equal(t, tc.deleteCount, deleteCount)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			require.Equal(t, tc.deleteCount, deleteCount)
+		})
+	}
 }

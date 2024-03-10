@@ -36,16 +36,16 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 	}
 
 	insertData := bson.M{
-		"firstName":   author.FirstName,
-		"lastName":    author.LastName,
-		"name":        author.Name,
-		"website":     author.WebsiteURL,
-		"instagram":   author.InstagramURL,
-		"youTube":     author.YouTubeURL,
-		"imageBase64": author.ImageBase64,
-		"userId":      author.UserID,
-		"createdAt":   time.Now().UnixMilli(),
-		"modifiedAt":  time.Now().UnixMilli(),
+		"firstName":    author.FirstName,
+		"lastName":     author.LastName,
+		"name":         author.Name,
+		"websiteUrl":   author.WebsiteURL,
+		"instagramUrl": author.InstagramURL,
+		"youtubeUrl":   author.YoutubeURL,
+		"imageBase64":  author.ImageBase64,
+		"userId":       author.UserID,
+		"createdAt":    time.Now().Unix(),
+		"modifiedAt":   time.Now().Unix(),
 	}
 
 	cursor, err := authorColl.collection.InsertOne(ctx, insertData)
@@ -76,4 +76,104 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	}
 
 	return authors, nil
+}
+
+func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID string) (Author, error) {
+	var author Author
+
+	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
+		return author, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveAuthorID,
+	}
+
+	if err = authorColl.collection.FindOne(ctx, filter).Decode(&author); err != nil {
+		log.Err(err).Msgf("failed to find author with authorID %s", authorID)
+		return author, err
+	}
+
+	return author, nil
+}
+
+func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate Author) (int64, error) {
+	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
+		return 0, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveAuthorID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{"modifiedAt": time.Now().Unix()},
+	}
+	if authorUpdate.Name != "" {
+		update["$set"].(bson.M)["name"] = authorUpdate.Name
+	}
+	if authorUpdate.LastName != "" {
+		update["$set"].(bson.M)["lastName"] = authorUpdate.LastName
+	}
+	if authorUpdate.FirstName != "" {
+		update["$set"].(bson.M)["firstName"] = authorUpdate.FirstName
+	}
+	if authorUpdate.WebsiteURL != "" {
+		update["$set"].(bson.M)["websiteUrl"] = authorUpdate.WebsiteURL
+	}
+	if authorUpdate.InstagramURL != "" {
+		update["$set"].(bson.M)["instagramUrl"] = authorUpdate.InstagramURL
+	}
+	if authorUpdate.YoutubeURL != "" {
+		update["$set"].(bson.M)["youtubeUrl"] = authorUpdate.YoutubeURL
+	}
+	if authorUpdate.ImageBase64 != "" {
+		update["$set"].(bson.M)["imageBase64"] = authorUpdate.ImageBase64
+	}
+
+	updateResult, err := authorColl.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Err(err).Msgf("failed to update author with author authorID %s", authorID)
+		return 0, err
+	}
+
+	if updateResult.MatchedCount < 1 {
+		log.Info().Msgf("could not find author with authorID %s", authorID)
+	}
+
+	modifiedCount := updateResult.ModifiedCount
+	if modifiedCount < 1 {
+		log.Info().Msgf("did not update author with authorID %s", authorID)
+	}
+
+	return modifiedCount, err
+}
+
+func (authorColl *AuthorCollection) DeleteAuthorByID(ctx context.Context, authorID string) (int64, error) {
+	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
+		return 0, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveAuthorID,
+	}
+
+	deleteResult, err := authorColl.collection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Err(err).Msgf("failed to delete author with authorID %s", authorID)
+		return 0, err
+	}
+
+	deleteCount := deleteResult.DeletedCount
+	if deleteCount < 1 {
+		log.Info().Msgf("author with authorID %s was not deleted", authorID)
+	}
+
+	return deleteCount, nil
 }

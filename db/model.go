@@ -38,9 +38,9 @@ type Author struct {
 	FirstName    string `bson:"firstName" json:"firstName,omitempty"`
 	LastName     string `bson:"lastName" json:"lastName,omitempty"`
 	Name         string `bson:"name" json:"name" binding:"required"`
-	WebsiteURL   string `bson:"website" json:"website,omitempty"`
-	InstagramURL string `bson:"instagram" json:"instagram,omitempty"`
-	YouTubeURL   string `bson:"youTube" json:"youTube,omitempty"`
+	WebsiteURL   string `bson:"websiteUrl" json:"websiteUrl,omitempty"`
+	InstagramURL string `bson:"instagramUrl" json:"instagramUrl,omitempty"`
+	YoutubeURL   string `bson:"youtubeUrl" json:"youtubeUrl,omitempty"`
 	ImageBase64  string `bson:"imageBase64" json:"imageBase64,omitempty"`
 	RecipeCount  int    `bson:"recipeCount" json:"recipeCount,omitempty"`
 	UserID       string `bson:"userId" json:"userId,omitempty"`

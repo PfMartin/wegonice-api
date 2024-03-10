@@ -39,8 +39,8 @@ func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primi
 		"email":      user.Email,
 		"password":   user.Password,
 		"role":       user.Role,
-		"createdAt":  time.Now().UnixMilli(),
-		"modifiedAt": time.Now().UnixMilli(),
+		"createdAt":  time.Now().Unix(),
+		"modifiedAt": time.Now().Unix(),
 	}
 
 	cursor, err := handler.collection.InsertOne(ctx, insertData)
@@ -106,7 +106,7 @@ func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string
 	}
 
 	update := bson.M{
-		"$set": bson.M{"modifiedAt": time.Now().UnixMilli() - 1000},
+		"$set": bson.M{"modifiedAt": time.Now().Unix()},
 	}
 	if userUpdate.Email != "" {
 		update["$set"].(bson.M)["email"] = userUpdate.Email

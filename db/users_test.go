@@ -65,7 +65,7 @@ func TestCreateUser(t *testing.T) {
 func TestGetAllUsers(t *testing.T) {
 	coll := getUserCollection(t)
 
-	for range 7 {
+	for i := 0; i < 10; i++ {
 		_ = createRandomUser(t, coll)
 	}
 

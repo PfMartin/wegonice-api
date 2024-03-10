@@ -69,7 +69,7 @@ func TestGetAllAuthors(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 
-	for range 7 {
+	for i := 0; i < 10; i++ {
 		_ = createRandomAuthor(t, authorColl, user.ID)
 	}
 

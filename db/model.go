@@ -25,12 +25,13 @@ const (
 )
 
 type User struct {
-	ID         string `bson:"_id" json:"id"`
-	Email      string `bson:"email" json:"email" binding:"required"`
-	Password   string `bson:"password" json:"password" binding:"required"`
-	Role       Role   `bson:"role" json:"role,omitempty"`
-	CreatedAt  int64  `bson:"createdAt" json:"createdAt,omitempty"`
-	ModifiedAt int64  `bson:"modifiedAt" json:"modifiedAt,omitempty"`
+	ID           string `bson:"_id" json:"id"`
+	Email        string `bson:"email" json:"email" binding:"required"`
+	PasswordHash string `bson:"passwordHash" json:"passwordHash"`
+	Password     string `bson:"password" json:"password" binding:"required"`
+	Role         Role   `bson:"role" json:"role,omitempty"`
+	CreatedAt    int64  `bson:"createdAt" json:"createdAt,omitempty"`
+	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt,omitempty"`
 }
 
 type Author struct {

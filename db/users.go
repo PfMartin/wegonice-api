@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/PfMartin/wegonice-api/util"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,12 +36,18 @@ func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primi
 		return primitive.NilObjectID, err
 	}
 
+	hashedPassword, err := util.HashPassword(user.Password)
+	if err != nil {
+		log.Err(err).Msgf("failed to hash password")
+		return primitive.NilObjectID, err
+	}
+
 	insertData := bson.M{
-		"email":      user.Email,
-		"password":   user.Password,
-		"role":       user.Role,
-		"createdAt":  time.Now().Unix(),
-		"modifiedAt": time.Now().Unix(),
+		"email":        user.Email,
+		"passwordHash": hashedPassword,
+		"role":         user.Role,
+		"createdAt":    time.Now().Unix(),
+		"modifiedAt":   time.Now().Unix(),
 	}
 
 	cursor, err := handler.collection.InsertOne(ctx, insertData)
@@ -111,8 +118,14 @@ func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string
 	if userUpdate.Email != "" {
 		update["$set"].(bson.M)["email"] = userUpdate.Email
 	}
+
 	if userUpdate.Password != "" {
-		update["$set"].(bson.M)["password"] = userUpdate.Password
+		hashedPassword, err := util.HashPassword(userUpdate.Password)
+		if err != nil {
+			log.Err(err).Msg("failed to hash new password")
+			return 0, err
+		}
+		update["$set"].(bson.M)["passwordHash"] = hashedPassword
 	}
 
 	updateResult, err := handler.collection.UpdateOne(ctx, filter, update)

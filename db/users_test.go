@@ -51,15 +51,18 @@ func createRandomUser(t *testing.T, coll *UserCollection) User {
 func TestCreateUser(t *testing.T) {
 	coll := getUserCollection(t)
 
-	t.Run("Creates a new user", func(t *testing.T) {
-		_ = createRandomUser(t, coll)
+	t.Run("Creates a new user and throws an error when the same user should be created again", func(t *testing.T) {
+		user := createRandomUser(t, coll)
+
+		_, err := coll.CreateUser(context.Background(), user)
+		require.Error(t, err) // Duplicate user error
 	})
 }
 
 func TestGetAllUsers(t *testing.T) {
 	coll := getUserCollection(t)
 
-	for i := 0; i < 7; i++ {
+	for range 7 {
 		_ = createRandomUser(t, coll)
 	}
 

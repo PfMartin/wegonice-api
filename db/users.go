@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserCollection struct {
@@ -23,6 +24,17 @@ func NewUserCollection(dbClient *mongo.Client, dbName string) *UserCollection {
 }
 
 func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
+	indexModel := mongo.IndexModel{
+		Keys:    bson.M{"email": 1},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err := handler.collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		log.Err(err).Msgf("user with email %s already exists", user.Email)
+		return primitive.NilObjectID, err
+	}
+
 	insertData := bson.M{
 		"email":      user.Email,
 		"password":   user.Password,

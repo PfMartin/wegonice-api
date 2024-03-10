@@ -23,13 +23,13 @@ func NewAuthorCollection(dbClient *mongo.Client, dbName string) *AuthorCollectio
 	}
 }
 
-func (handler *AuthorCollection) CreateAuthor(ctx context.Context, author Author) (primitive.ObjectID, error) {
+func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Author) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"name": 1},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := handler.collection.Indexes().CreateOne(ctx, indexModel)
+	_, err := authorColl.collection.Indexes().CreateOne(ctx, indexModel)
 	if err != nil {
 		log.Err(err).Msgf("author with name %s already exists", author.Name)
 		return primitive.NilObjectID, err
@@ -48,7 +48,7 @@ func (handler *AuthorCollection) CreateAuthor(ctx context.Context, author Author
 		"modifiedAt":  time.Now().UnixMilli(),
 	}
 
-	cursor, err := handler.collection.InsertOne(ctx, insertData)
+	cursor, err := authorColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -56,4 +56,24 @@ func (handler *AuthorCollection) CreateAuthor(ctx context.Context, author Author
 	authorID := cursor.InsertedID.(primitive.ObjectID)
 
 	return authorID, nil
+}
+
+func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error) {
+	var authors []Author
+
+	findOptions := pagination.getFindOptions()
+	findOptions.SetSort(bson.M{"name": 1})
+
+	cursor, err := authorColl.collection.Find(ctx, bson.M{}, findOptions)
+	if err != nil {
+		log.Err(err).Msg("failed to find author documents")
+		return authors, err
+	}
+
+	if err = cursor.All(ctx, &authors); err != nil {
+		log.Err(err).Msg("failed to parse author documents")
+		return authors, err
+	}
+
+	return authors, nil
 }

@@ -24,13 +24,13 @@ func NewUserCollection(dbClient *mongo.Client, dbName string) *UserCollection {
 	}
 }
 
-func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
+func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"email": 1},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := handler.collection.Indexes().CreateOne(ctx, indexModel)
+	_, err := userColl.collection.Indexes().CreateOne(ctx, indexModel)
 	if err != nil {
 		log.Err(err).Msgf("user with email %s already exists", user.Email)
 		return primitive.NilObjectID, err
@@ -50,7 +50,7 @@ func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primi
 		"modifiedAt":   time.Now().Unix(),
 	}
 
-	cursor, err := handler.collection.InsertOne(ctx, insertData)
+	cursor, err := userColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -60,13 +60,13 @@ func (handler *UserCollection) CreateUser(ctx context.Context, user User) (primi
 	return userID, nil
 }
 
-func (handler *UserCollection) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
+func (userColl *UserCollection) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
 	var users []User
 
 	findOptions := pagination.getFindOptions()
 	findOptions.SetSort(bson.M{"email": 1})
 
-	cursor, err := handler.collection.Find(ctx, bson.M{}, findOptions)
+	cursor, err := userColl.collection.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
 		log.Err(err).Msg("failed to find user documents")
 		return users, err
@@ -80,7 +80,7 @@ func (handler *UserCollection) GetAllUsers(ctx context.Context, pagination Pagin
 	return users, nil
 }
 
-func (handler *UserCollection) GetUserByID(ctx context.Context, userID string) (User, error) {
+func (userColl *UserCollection) GetUserByID(ctx context.Context, userID string) (User, error) {
 	var user User
 
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
@@ -93,7 +93,7 @@ func (handler *UserCollection) GetUserByID(ctx context.Context, userID string) (
 		"_id": primitiveUserID,
 	}
 
-	if err = handler.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+	if err = userColl.collection.FindOne(ctx, filter).Decode(&user); err != nil {
 		log.Err(err).Msgf("failed to find user with userID %s", userID)
 		return user, err
 	}
@@ -101,7 +101,7 @@ func (handler *UserCollection) GetUserByID(ctx context.Context, userID string) (
 	return user, nil
 }
 
-func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
+func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
@@ -128,7 +128,7 @@ func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string
 		update["$set"].(bson.M)["passwordHash"] = hashedPassword
 	}
 
-	updateResult, err := handler.collection.UpdateOne(ctx, filter, update)
+	updateResult, err := userColl.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Err(err).Msgf("failed to update user with user userID %s", userID)
 		return 0, err
@@ -146,7 +146,7 @@ func (handler *UserCollection) UpdateUserByID(ctx context.Context, userID string
 	return modifiedCount, err
 }
 
-func (handler *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
+func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
@@ -157,7 +157,7 @@ func (handler *UserCollection) DeleteUserByID(ctx context.Context, userID string
 		"_id": primitiveUserID,
 	}
 
-	deleteResult, err := handler.collection.DeleteOne(ctx, filter)
+	deleteResult, err := userColl.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Err(err).Msgf("failed to delete user with userID %s", userID)
 		return 0, err

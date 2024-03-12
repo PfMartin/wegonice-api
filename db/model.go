@@ -49,3 +49,53 @@ type Author struct {
 	CreatedAt    int64  `bson:"createdAt" json:"createdAt"`
 	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt"`
 }
+
+type Category string
+
+const (
+	Breakfast Category = "breakfast"
+	Main      Category = "main"
+	Desert    Category = "desert"
+	Smoothie  Category = "smoothie"
+	Baby      Category = "baby"
+	Drink     Category = "drink"
+)
+
+type AmountUnit string
+
+const (
+	Milliliters AmountUnit = "ml"
+	Liters      AmountUnit = "l"
+	Milligrams  AmountUnit = "mg"
+	Grams       AmountUnit = "g"
+	Tablespoon  AmountUnit = "tbs"
+	Teaspoon    AmountUnit = "tsp"
+	Piece       AmountUnit = "pc"
+)
+
+type Ingredient struct {
+	Name   string `bson:"name" json:"name"`
+	Amount int    `bson:"amount" json:"amount"`
+	Unit   string `bson:"unit" json:"unit"`
+}
+
+type PrepStep struct {
+	Rank        int    `bson:"rank" json:"rank"`
+	Description string `bson:"description" json:"description"`
+}
+
+type Recipe struct {
+	ID          string       `bson:"_id" json:"id"`
+	Name        string       `bson:"name" json:"name"`
+	RecipeURL   string       `bson:"recipeUrl" json:"recipeUrl,omitempty"`
+	TimeM       int          `bson:"timeM" json:"timeM"`
+	Category    Category     `bson:"category" json:"category"`
+	Ingredients []Ingredient `bson:"ingredients" json:"ingredients"`
+	PrepSteps   []PrepStep   `bson:"prepSteps" json:"prepSteps"`
+	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required"`
+	Author      Author       `bson:"author" json:"author"`
+	UserID      string       `bson:"userId" json:"userId,omitempty"`
+	User        User         `bson:"user" json:"user"`
+	CreatedAt   int64        `bson:"createdAt" json:"createdAt"`
+	ModifiedAt  int64        `bson:"modifiedAt" json:"modifiedAt"`
+}

@@ -93,3 +93,27 @@ func TestCreateRecipe(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestGetAllRecipes(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+
+	recipeColl := getRecipeCollection(t)
+
+	for i := 0; i < 10; i++ {
+		_ = createRandomRecipe(t, recipeColl, user.ID, author.ID)
+	}
+
+	pagination := Pagination{
+		PageID:   1,
+		PageSize: 5,
+	}
+
+	t.Run("Gets all recipes with pagination", func(t *testing.T) {
+		recipes, err := recipeColl.GetAllRecipes(context.Background(), pagination)
+		require.NoError(t, err)
+		require.NotEmpty(t, recipes)
+
+		require.Equal(t, int(pagination.PageSize), len(recipes))
+	})
+}

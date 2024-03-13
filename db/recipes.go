@@ -78,3 +78,49 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 
 	return recipes, nil
 }
+
+func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error) {
+	var recipe Recipe
+
+	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
+		return recipe, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveRecipeID,
+	}
+
+	if err = recipeColl.collection.FindOne(ctx, filter).Decode(&recipe); err != nil {
+		log.Err(err).Msgf("failed to find recipe with recipeID %s", recipeID)
+		return recipe, err
+	}
+
+	return recipe, nil
+}
+
+func (recipeColl *RecipeCollection) DeleteRecipeByID(ctx context.Context, recipeID string) (int64, error) {
+	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
+		return 0, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveRecipeID,
+	}
+
+	deleteResult, err := recipeColl.collection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Err(err).Msgf("failed to delete recipe with recipeID %s", recipeID)
+		return 0, err
+	}
+
+	deleteCount := deleteResult.DeletedCount
+	if deleteCount < 1 {
+		log.Info().Msgf("recipe with recipeID %s was not deleted", recipeID)
+	}
+
+	return deleteCount, nil
+}

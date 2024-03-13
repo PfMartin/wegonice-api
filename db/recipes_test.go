@@ -134,3 +134,99 @@ func TestUnitGetAllRecipes(t *testing.T) {
 		require.Equal(t, int(pagination.PageSize), len(recipes))
 	})
 }
+
+func TestUnitGetRecipeByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+	recipeColl := getRecipeCollection(t)
+
+	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+
+	testCases := []struct {
+		name           string
+		recipeID       string
+		hasError       bool
+		expectedRecipe Recipe
+	}{
+		{
+			name:           "Success",
+			recipeID:       createdRecipe.ID,
+			hasError:       false,
+			expectedRecipe: createdRecipe,
+		},
+		{
+			name:     "Fail with invalid recipeID",
+			recipeID: "test",
+			hasError: true,
+		},
+		{
+			name:     "Fail with recipeID not found",
+			recipeID: "659c00751f717854f690270d",
+			hasError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotRecipe, err := recipeColl.GetRecipeByID(context.Background(), tc.recipeID)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRecipe, gotRecipe)
+		})
+	}
+}
+
+func TestDeleteRecipeByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+	recipeColl := getRecipeCollection(t)
+
+	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+
+	testCases := []struct {
+		name        string
+		recipeID    string
+		hasError    bool
+		deleteCount int64
+	}{
+		{
+			name:        "Success",
+			recipeID:    createdRecipe.ID,
+			hasError:    false,
+			deleteCount: 1,
+		},
+		{
+			name:        "Fail with invalid recipeID",
+			recipeID:    "test",
+			hasError:    true,
+			deleteCount: 0,
+		},
+		{
+			name:        "Fail with recipeID not found",
+			recipeID:    "659c00751f717854f690270d",
+			hasError:    false,
+			deleteCount: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			deleteCount, err := recipeColl.DeleteRecipeByID(context.Background(), tc.recipeID)
+			require.Equal(t, tc.deleteCount, deleteCount)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			require.Equal(t, tc.deleteCount, deleteCount)
+		})
+	}
+}

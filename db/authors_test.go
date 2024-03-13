@@ -10,6 +10,8 @@ import (
 )
 
 func getAuthorCollection(t *testing.T) *AuthorCollection {
+	t.Helper()
+
 	conf := getDatabaseConfiguration(t)
 
 	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
@@ -21,6 +23,8 @@ func getAuthorCollection(t *testing.T) *AuthorCollection {
 }
 
 func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID string) Author {
+	t.Helper()
+
 	author := Author{
 		FirstName:    util.RandomString(6),
 		LastName:     util.RandomString(6),
@@ -53,7 +57,7 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 	}
 }
 
-func TestCreateAuthor(t *testing.T) {
+func TestUnitCreateAuthor(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 
@@ -65,7 +69,7 @@ func TestCreateAuthor(t *testing.T) {
 	})
 }
 
-func TestGetAllAuthors(t *testing.T) {
+func TestUnitGetAllAuthors(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 
@@ -87,7 +91,7 @@ func TestGetAllAuthors(t *testing.T) {
 	})
 }
 
-func TestGetAuthorByID(t *testing.T) {
+func TestUnitGetAuthorByID(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
@@ -131,7 +135,7 @@ func TestGetAuthorByID(t *testing.T) {
 	}
 }
 
-func TestUpdateAuthorByID(t *testing.T) {
+func TestUnitUpdateAuthorByID(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 	createdAuthor := createRandomAuthor(t, authorColl, user.ID)

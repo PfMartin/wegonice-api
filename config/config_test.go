@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetConfig(t *testing.T) {
+func TestUnitGetConfig(t *testing.T) {
 	t.Run("Gets correct config", func(t *testing.T) {
 		conf, err := NewConfig("./", "test.env")
 		require.NoError(t, err)

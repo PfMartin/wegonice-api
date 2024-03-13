@@ -10,6 +10,8 @@ import (
 )
 
 func getUserCollection(t *testing.T) *UserCollection {
+	t.Helper()
+
 	conf := getDatabaseConfiguration(t)
 
 	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
@@ -21,6 +23,8 @@ func getUserCollection(t *testing.T) *UserCollection {
 }
 
 func createRandomUser(t *testing.T, coll *UserCollection) User {
+	t.Helper()
+
 	user := User{
 		Email:      util.RandomEmail(),
 		Password:   util.RandomString(6),
@@ -51,7 +55,7 @@ func createRandomUser(t *testing.T, coll *UserCollection) User {
 	}
 }
 
-func TestCreateUser(t *testing.T) {
+func TestUnitCreateUser(t *testing.T) {
 	coll := getUserCollection(t)
 
 	t.Run("Creates a new user and throws an error when the same user should be created again", func(t *testing.T) {
@@ -62,7 +66,7 @@ func TestCreateUser(t *testing.T) {
 	})
 }
 
-func TestGetAllUsers(t *testing.T) {
+func TestUnitGetAllUsers(t *testing.T) {
 	coll := getUserCollection(t)
 
 	for i := 0; i < 10; i++ {
@@ -84,7 +88,7 @@ func TestGetAllUsers(t *testing.T) {
 	})
 }
 
-func TestGetUserByID(t *testing.T) {
+func TestUnitGetUserByID(t *testing.T) {
 	coll := getUserCollection(t)
 
 	createdUser := createRandomUser(t, coll)
@@ -132,7 +136,7 @@ func TestGetUserByID(t *testing.T) {
 	}
 }
 
-func TestUpdateUserByID(t *testing.T) {
+func TestUnitUpdateUserByID(t *testing.T) {
 	coll := getUserCollection(t)
 
 	createdUser := createRandomUser(t, coll)
@@ -208,7 +212,7 @@ func TestUpdateUserByID(t *testing.T) {
 	}
 }
 
-func TestDeleteUserByID(t *testing.T) {
+func TestUnitDeleteUserByID(t *testing.T) {
 	coll := getUserCollection(t)
 
 	createdUser := createRandomUser(t, coll)

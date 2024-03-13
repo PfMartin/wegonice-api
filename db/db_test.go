@@ -26,7 +26,7 @@ func getDatabaseConfiguration(t *testing.T) config.Config {
 	return conf
 }
 
-func TestConnectToDatabase(t *testing.T) {
+func TestUnitConnectToDatabase(t *testing.T) {
 	t.Run("Connects to database", func(t *testing.T) {
 		conf := getDatabaseConfiguration(t)
 

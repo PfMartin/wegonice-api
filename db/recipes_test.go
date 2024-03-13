@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,6 +14,8 @@ var categories = []Category{Breakfast, Main, Desert, Smoothie, Baby, Drink}
 var amountUnits = []AmountUnit{Milliliters, Liters, Milligrams, Grams, Tablespoon, Teaspoon, Piece}
 
 func getRecipeCollection(t *testing.T) *RecipeCollection {
+	t.Helper()
+
 	conf := getDatabaseConfiguration(t)
 
 	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
@@ -24,24 +27,38 @@ func getRecipeCollection(t *testing.T) *RecipeCollection {
 }
 
 func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID string, authorID string) Recipe {
-	var ingredients []Ingredient
-	for i := 0; i < 10; i++ {
-		amountIdx := util.RandomInt(0, int64(len(amountUnits)-1))
+	t.Helper()
 
-		ingredients = append(ingredients, Ingredient{
-			Name:   util.RandomString(6),
-			Amount: int(util.RandomInt(0, 100)),
-			Unit:   amountUnits[amountIdx],
-		})
-	}
+	var wg sync.WaitGroup
+
+	var ingredients []Ingredient
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			amountIdx := util.RandomInt(0, int64(len(amountUnits)-1))
+
+			ingredients = append(ingredients, Ingredient{
+				Name:   util.RandomString(6),
+				Amount: int(util.RandomInt(0, 100)),
+				Unit:   amountUnits[amountIdx],
+			})
+		}
+	}()
 
 	var prepSteps []PrepStep
-	for i := 0; i < 10; i++ {
-		prepSteps = append(prepSteps, PrepStep{
-			Rank:        i + 1,
-			Description: util.RandomString(20),
-		})
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			prepSteps = append(prepSteps, PrepStep{
+				Rank:        i + 1,
+				Description: util.RandomString(20),
+			})
+		}
+	}()
+
+	wg.Wait()
 
 	categoryIdx := util.RandomInt(0, int64(len(categories)-1))
 	category := categories[categoryIdx]
@@ -80,7 +97,7 @@ func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID strin
 	}
 }
 
-func TestCreateRecipe(t *testing.T) {
+func TestUnitCreateRecipe(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
 
@@ -94,7 +111,7 @@ func TestCreateRecipe(t *testing.T) {
 	})
 }
 
-func TestGetAllRecipes(t *testing.T) {
+func TestUnitGetAllRecipes(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
 

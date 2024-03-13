@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func TestPassword(t *testing.T) {
+func TestUnitPassword(t *testing.T) {
 	testCases := []struct {
 		name      string
 		password1 string

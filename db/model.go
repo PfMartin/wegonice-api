@@ -42,7 +42,7 @@ type Author struct {
 	WebsiteURL   string `bson:"websiteUrl" json:"websiteUrl,omitempty"`
 	InstagramURL string `bson:"instagramUrl" json:"instagramUrl,omitempty"`
 	YoutubeURL   string `bson:"youtubeUrl" json:"youtubeUrl,omitempty"`
-	ImageBase64  string `bson:"imageBase64" json:"imageBase64,omitempty"`
+	ImageName    string `bson:"imageName" json:"imageName,omitempty"`
 	RecipeCount  int    `bson:"recipeCount" json:"recipeCount,omitempty"`
 	UserID       string `bson:"userId" json:"userId,omitempty"`
 	UserCreated  User   `bson:"userCreated" json:"userCreated"`
@@ -87,6 +87,7 @@ type PrepStep struct {
 type Recipe struct {
 	ID          string       `bson:"_id" json:"id"`
 	Name        string       `bson:"name" json:"name"`
+	ImageName   string       `bson:"imageName" json:"imageName"`
 	RecipeURL   string       `bson:"recipeUrl" json:"recipeUrl,omitempty"`
 	TimeM       int          `bson:"timeM" json:"timeM"`
 	Category    Category     `bson:"category" json:"category"`

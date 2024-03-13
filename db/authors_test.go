@@ -28,7 +28,7 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 		WebsiteURL:   util.RandomString(10),
 		InstagramURL: util.RandomString(10),
 		YoutubeURL:   util.RandomString(10),
-		ImageBase64:  util.RandomString(10),
+		ImageName:    util.RandomString(10),
 		UserID:       userID,
 	}
 
@@ -46,7 +46,7 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 		WebsiteURL:   author.WebsiteURL,
 		InstagramURL: author.InstagramURL,
 		YoutubeURL:   author.YoutubeURL,
-		ImageBase64:  author.ImageBase64,
+		ImageName:    author.ImageName,
 		UserID:       author.UserID,
 		CreatedAt:    time.Now().Unix(),
 		ModifiedAt:   time.Now().Unix(),
@@ -143,7 +143,7 @@ func TestUpdateAuthorByID(t *testing.T) {
 		WebsiteURL:   util.RandomString(6),
 		InstagramURL: util.RandomString(6),
 		YoutubeURL:   util.RandomString(6),
-		ImageBase64:  util.RandomString(10),
+		ImageName:    util.RandomString(10),
 	}
 
 	testCases := []struct {
@@ -201,7 +201,7 @@ func TestUpdateAuthorByID(t *testing.T) {
 				WebsiteURL:   authorUpdate.WebsiteURL,
 				InstagramURL: authorUpdate.InstagramURL,
 				YoutubeURL:   authorUpdate.YoutubeURL,
-				ImageBase64:  authorUpdate.ImageBase64,
+				ImageName:    authorUpdate.ImageName,
 				CreatedAt:    createdAuthor.CreatedAt,
 				ModifiedAt:   time.Now().Unix(),
 			}
@@ -213,7 +213,7 @@ func TestUpdateAuthorByID(t *testing.T) {
 			require.Equal(t, expectedAuthor.WebsiteURL, updatedAuthor.WebsiteURL)
 			require.Equal(t, expectedAuthor.InstagramURL, updatedAuthor.InstagramURL)
 			require.Equal(t, expectedAuthor.YoutubeURL, updatedAuthor.YoutubeURL)
-			require.Equal(t, expectedAuthor.ImageBase64, updatedAuthor.ImageBase64)
+			require.Equal(t, expectedAuthor.ImageName, updatedAuthor.ImageName)
 			require.WithinDuration(t, time.Unix(expectedAuthor.CreatedAt, 0), time.Unix(updatedAuthor.CreatedAt, 0), 1*time.Second)
 			require.WithinDuration(t, time.Unix(expectedAuthor.ModifiedAt, 0), time.Unix(updatedAuthor.ModifiedAt, 0), 1*time.Second)
 		})

@@ -42,7 +42,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 		"websiteUrl":   author.WebsiteURL,
 		"instagramUrl": author.InstagramURL,
 		"youtubeUrl":   author.YoutubeURL,
-		"imageBase64":  author.ImageBase64,
+		"imageName":    author.ImageName,
 		"userId":       author.UserID,
 		"createdAt":    time.Now().Unix(),
 		"modifiedAt":   time.Now().Unix(),
@@ -131,8 +131,8 @@ func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, author
 	if authorUpdate.YoutubeURL != "" {
 		update["$set"].(bson.M)["youtubeUrl"] = authorUpdate.YoutubeURL
 	}
-	if authorUpdate.ImageBase64 != "" {
-		update["$set"].(bson.M)["imageBase64"] = authorUpdate.ImageBase64
+	if authorUpdate.ImageName != "" {
+		update["$set"].(bson.M)["imageName"] = authorUpdate.ImageName
 	}
 
 	updateResult, err := authorColl.collection.UpdateOne(ctx, filter, update)

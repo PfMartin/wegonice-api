@@ -52,6 +52,7 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 
 	cursor, err := userColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
+		log.Err(err).Msgf("failed to insert user with email %s", user.Email)
 		return primitive.NilObjectID, err
 	}
 

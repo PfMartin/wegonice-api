@@ -50,6 +50,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 
 	cursor, err := authorColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
+		log.Err(err).Msgf("failed to insert author with name %s", author.Name)
 		return primitive.NilObjectID, err
 	}
 

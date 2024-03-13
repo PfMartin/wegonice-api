@@ -74,9 +74,9 @@ const (
 )
 
 type Ingredient struct {
-	Name   string `bson:"name" json:"name"`
-	Amount int    `bson:"amount" json:"amount"`
-	Unit   string `bson:"unit" json:"unit"`
+	Name   string     `bson:"name" json:"name"`
+	Amount int        `bson:"amount" json:"amount"`
+	Unit   AmountUnit `bson:"unit" json:"unit"`
 }
 
 type PrepStep struct {

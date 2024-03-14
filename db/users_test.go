@@ -7,6 +7,7 @@ import (
 
 	"github.com/PfMartin/wegonice-api/util"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getUserCollection(t *testing.T) *UserCollection {
@@ -218,10 +219,12 @@ func TestUnitDeleteUserByID(t *testing.T) {
 	createdUser := createRandomUser(t, coll)
 
 	testCases := []struct {
-		name        string
-		userID      string
-		hasError    bool
-		deleteCount int64
+		name                 string
+		userID               string
+		hasError             bool
+		hasReferencingRecipe bool
+		hasReferencingAuthor bool
+		deleteCount          int64
 	}{
 		{
 			name:        "Success",
@@ -241,10 +244,32 @@ func TestUnitDeleteUserByID(t *testing.T) {
 			hasError:    false,
 			deleteCount: 0,
 		},
+		{
+			name:                 "Fail due to referencing author",
+			userID:               createdUser.ID,
+			hasError:             true,
+			hasReferencingAuthor: true,
+			deleteCount:          0,
+		},
+		{
+			name:                 "Fail due to referencing recipe",
+			userID:               createdUser.ID,
+			hasError:             true,
+			hasReferencingRecipe: true,
+			deleteCount:          0,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.hasReferencingAuthor {
+				createRandomAuthor(t, getAuthorCollection(t), tc.userID)
+			}
+
+			if tc.hasReferencingRecipe {
+				createRandomRecipe(t, getRecipeCollection(t), tc.userID, primitive.NewObjectID().Hex())
+			}
+
 			deleteCount, err := coll.DeleteUserByID(context.Background(), tc.userID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 

@@ -230,10 +230,11 @@ func TestDeleteAuthorByID(t *testing.T) {
 	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
 
 	testCases := []struct {
-		name        string
-		authorID    string
-		hasError    bool
-		deleteCount int64
+		name                 string
+		authorID             string
+		hasError             bool
+		hasReferencingRecipe bool
+		deleteCount          int64
 	}{
 		{
 			name:        "Success",
@@ -253,10 +254,21 @@ func TestDeleteAuthorByID(t *testing.T) {
 			hasError:    false,
 			deleteCount: 0,
 		},
+		{
+			name:                 "Fail with author referenced in at least one recipes",
+			authorID:             createdAuthor.ID,
+			hasError:             true,
+			hasReferencingRecipe: true,
+			deleteCount:          0,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.hasReferencingRecipe {
+				createRandomRecipe(t, getRecipeCollection(t), user.ID, createdAuthor.ID)
+			}
+
 			deleteCount, err := authorColl.DeleteAuthorByID(context.Background(), tc.authorID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 

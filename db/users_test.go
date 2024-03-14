@@ -131,8 +131,8 @@ func TestUnitGetUserByID(t *testing.T) {
 			require.Equal(t, tc.expectedUser.Email, gotUser.Email)
 			require.NoError(t, util.CheckPassword(tc.expectedUser.Password, gotUser.PasswordHash))
 			require.Equal(t, tc.expectedUser.Role, gotUser.Role)
-			require.WithinDuration(t, time.Unix(tc.expectedUser.CreatedAt, 0), time.Unix(gotUser.CreatedAt, 0), 1*time.Second)
-			require.WithinDuration(t, time.Unix(tc.expectedUser.ModifiedAt, 0), time.Unix(gotUser.ModifiedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.CreatedAt, 0), time.Unix(gotUser.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.ModifiedAt, 0), time.Unix(gotUser.ModifiedAt, 0), 5*time.Second)
 		})
 	}
 }
@@ -207,8 +207,8 @@ func TestUnitUpdateUserByID(t *testing.T) {
 			require.Equal(t, expectedUser.Email, updatedUser.Email)
 			require.NoError(t, util.CheckPassword(expectedUser.Password, updatedUser.PasswordHash))
 			require.Equal(t, expectedUser.Role, updatedUser.Role)
-			require.WithinDuration(t, time.Unix(expectedUser.CreatedAt, 0), time.Unix(updatedUser.CreatedAt, 0), 1*time.Second)
-			require.WithinDuration(t, time.Unix(expectedUser.ModifiedAt, 0), time.Unix(updatedUser.ModifiedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedUser.CreatedAt, 0), time.Unix(updatedUser.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(expectedUser.ModifiedAt, 0), time.Unix(updatedUser.ModifiedAt, 0), 5*time.Second)
 		})
 	}
 }

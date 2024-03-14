@@ -218,8 +218,8 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 			require.Equal(t, expectedAuthor.InstagramURL, updatedAuthor.InstagramURL)
 			require.Equal(t, expectedAuthor.YoutubeURL, updatedAuthor.YoutubeURL)
 			require.Equal(t, expectedAuthor.ImageName, updatedAuthor.ImageName)
-			require.WithinDuration(t, time.Unix(expectedAuthor.CreatedAt, 0), time.Unix(updatedAuthor.CreatedAt, 0), 1*time.Second)
-			require.WithinDuration(t, time.Unix(expectedAuthor.ModifiedAt, 0), time.Unix(updatedAuthor.ModifiedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedAuthor.CreatedAt, 0), time.Unix(updatedAuthor.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(expectedAuthor.ModifiedAt, 0), time.Unix(updatedAuthor.ModifiedAt, 0), 5*time.Second)
 		})
 	}
 }

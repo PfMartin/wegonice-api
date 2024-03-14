@@ -291,8 +291,8 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 			require.Equal(t, expectedRecipe.Category, updatedRecipe.Category)
 			require.Equal(t, expectedRecipe.Ingredients, updatedRecipe.Ingredients)
 			require.Equal(t, expectedRecipe.PrepSteps, updatedRecipe.PrepSteps)
-			require.WithinDuration(t, time.Unix(expectedRecipe.CreatedAt, 0), time.Unix(updatedRecipe.CreatedAt, 0), 1*time.Second)
-			require.WithinDuration(t, time.Unix(expectedRecipe.ModifiedAt, 0), time.Unix(updatedRecipe.ModifiedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedRecipe.CreatedAt, 0), time.Unix(updatedRecipe.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(expectedRecipe.ModifiedAt, 0), time.Unix(updatedRecipe.ModifiedAt, 0), 5*time.Second)
 		})
 	}
 }

@@ -59,6 +59,7 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 	return recipeID, nil
 }
 
+// TODO: Aggregate Author and User into the recipes
 func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, pagination Pagination) ([]Recipe, error) {
 	var recipes []Recipe
 
@@ -79,6 +80,7 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 	return recipes, nil
 }
 
+// TODO: Aggregate author and user into the recipe
 func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error) {
 	var recipe Recipe
 
@@ -98,6 +100,67 @@ func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID 
 	}
 
 	return recipe, nil
+}
+
+func (recipeColl *RecipeCollection) UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate Recipe) (int64, error) {
+	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
+		return 0, err
+	}
+
+	filter := bson.M{
+		"_id": primitiveRecipeID,
+	}
+
+	update := bson.M{
+		"$set": bson.M{"modifiedAt": time.Now().Unix()},
+	}
+	// TODO: Create generic function for this
+	if recipeUpdate.Name != "" {
+		update["$set"].(bson.M)["name"] = recipeUpdate.Name
+	}
+	if recipeUpdate.ImageName != "" {
+		update["$set"].(bson.M)["imageName"] = recipeUpdate.ImageName
+	}
+	if recipeUpdate.RecipeURL != "" {
+		update["$set"].(bson.M)["recipeUrl"] = recipeUpdate.RecipeURL
+	}
+	if recipeUpdate.TimeM != 0 {
+		update["$set"].(bson.M)["timeM"] = recipeUpdate.TimeM
+	}
+	if recipeUpdate.Category != "" {
+		update["$set"].(bson.M)["category"] = recipeUpdate.Category
+	}
+	if len(recipeUpdate.Ingredients) != 0 {
+		update["$set"].(bson.M)["ingredients"] = recipeUpdate.Ingredients
+	}
+	if len(recipeUpdate.PrepSteps) != 0 {
+		update["$set"].(bson.M)["prepSteps"] = recipeUpdate.PrepSteps
+	}
+	if recipeUpdate.AuthorID != "" {
+		update["$set"].(bson.M)["authorID"] = recipeUpdate.AuthorID
+	}
+	if recipeUpdate.UserID != "" {
+		update["$set"].(bson.M)["userID"] = recipeUpdate.UserID
+	}
+
+	updateResult, err := recipeColl.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Err(err).Msgf("failed to update recipe with recipe recipeID %s", recipeID)
+		return 0, err
+	}
+
+	if updateResult.MatchedCount < 1 {
+		log.Info().Msgf("could not find recipe with recipeID %s", recipeID)
+	}
+
+	modifiedCount := updateResult.ModifiedCount
+	if modifiedCount < 1 {
+		log.Info().Msgf("did not update recipe with recipeID %s", recipeID)
+	}
+
+	return modifiedCount, err
 }
 
 func (recipeColl *RecipeCollection) DeleteRecipeByID(ctx context.Context, recipeID string) (int64, error) {

@@ -26,7 +26,32 @@ func getRecipeCollection(t *testing.T) *RecipeCollection {
 	return coll
 }
 
-func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID string, authorID string) Recipe {
+func getRandomIngredients(t *testing.T, ingredientsCount int, ingredients *[]Ingredient) {
+	t.Helper()
+
+	for i := 0; i < ingredientsCount; i++ {
+		amountIdx := util.RandomInt(0, int64(len(amountUnits)-1))
+
+		*ingredients = append(*ingredients, Ingredient{
+			Name:   util.RandomString(6),
+			Amount: int(util.RandomInt(0, 100)),
+			Unit:   amountUnits[amountIdx],
+		})
+	}
+}
+
+func getRandomPrepSteps(t *testing.T, stepsCount int, prepSteps *[]PrepStep) {
+	t.Helper()
+
+	for i := 0; i < stepsCount; i++ {
+		*prepSteps = append(*prepSteps, PrepStep{
+			Rank:        i + 1,
+			Description: util.RandomString(20),
+		})
+	}
+}
+
+func getRandomIngredientsAndPrepSteps(t *testing.T, ingredientCount, prepStepCount int) ([]Ingredient, []PrepStep) {
 	t.Helper()
 
 	var wg sync.WaitGroup
@@ -35,30 +60,28 @@ func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID strin
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10; i++ {
-			amountIdx := util.RandomInt(0, int64(len(amountUnits)-1))
-
-			ingredients = append(ingredients, Ingredient{
-				Name:   util.RandomString(6),
-				Amount: int(util.RandomInt(0, 100)),
-				Unit:   amountUnits[amountIdx],
-			})
-		}
+		getRandomIngredients(t, ingredientCount, &ingredients)
 	}()
 
 	var prepSteps []PrepStep
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10; i++ {
-			prepSteps = append(prepSteps, PrepStep{
-				Rank:        i + 1,
-				Description: util.RandomString(20),
-			})
-		}
+		getRandomPrepSteps(t, prepStepCount, &prepSteps)
 	}()
 
 	wg.Wait()
+
+	require.Equal(t, ingredientCount, len(ingredients))
+	require.Equal(t, prepStepCount, len(prepSteps))
+
+	return ingredients, prepSteps
+}
+
+func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID string, authorID string) Recipe {
+	t.Helper()
+
+	ingredients, prepSteps := getRandomIngredientsAndPrepSteps(t, 10, 10)
 
 	categoryIdx := util.RandomInt(0, int64(len(categories)-1))
 	category := categories[categoryIdx]
@@ -177,6 +200,99 @@ func TestUnitGetRecipeByID(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRecipe, gotRecipe)
+		})
+	}
+}
+
+func TestUnitUpdateRecipeByID(t *testing.T) {
+	user := createRandomUser(t, getUserCollection(t))
+	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+
+	recipeColl := getRecipeCollection(t)
+	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+
+	ingredients, prepSteps := getRandomIngredientsAndPrepSteps(t, 5, 5)
+
+	recipeUpdate := Recipe{
+		Name:        util.RandomString(4),
+		ImageName:   util.RandomString(10),
+		RecipeURL:   util.RandomString(8),
+		TimeM:       int(util.RandomInt(0, 180)),
+		Category:    categories[util.RandomInt(0, int64(len(categories)-1))],
+		Ingredients: ingredients,
+		PrepSteps:   prepSteps,
+	}
+
+	testCases := []struct {
+		name          string
+		recipeID      string
+		recipeUpdate  Recipe
+		hasError      bool
+		modifiedCount int64
+	}{
+		{
+			name:          "Success",
+			recipeID:      createdRecipe.ID,
+			recipeUpdate:  recipeUpdate,
+			hasError:      false,
+			modifiedCount: 1,
+		},
+		{
+			name:          "Fail with invalid recipeID",
+			recipeID:      "test",
+			hasError:      true,
+			modifiedCount: 0,
+		},
+		{
+			name:          "Fail with recipeID not found",
+			recipeID:      "659c00751f717854f690270d",
+			hasError:      false,
+			modifiedCount: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			modifiedCount, err := recipeColl.UpdateRecipeByID(context.Background(), tc.recipeID, tc.recipeUpdate)
+			require.Equal(t, tc.modifiedCount, modifiedCount)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			if modifiedCount < 1 {
+				return
+			}
+
+			updatedRecipe, err := recipeColl.GetRecipeByID(context.Background(), tc.recipeID)
+			require.NoError(t, err)
+
+			expectedRecipe := Recipe{
+				ID:          createdRecipe.ID,
+				Name:        recipeUpdate.Name,
+				ImageName:   recipeUpdate.ImageName,
+				RecipeURL:   recipeUpdate.RecipeURL,
+				TimeM:       recipeUpdate.TimeM,
+				Category:    recipeUpdate.Category,
+				Ingredients: recipeUpdate.Ingredients,
+				PrepSteps:   recipeUpdate.PrepSteps,
+				CreatedAt:   createdRecipe.CreatedAt,
+				ModifiedAt:  time.Now().Unix(),
+			}
+
+			require.Equal(t, expectedRecipe.ID, updatedRecipe.ID)
+			require.Equal(t, expectedRecipe.Name, updatedRecipe.Name)
+			require.Equal(t, expectedRecipe.ImageName, updatedRecipe.ImageName)
+			require.Equal(t, expectedRecipe.RecipeURL, updatedRecipe.RecipeURL)
+			require.Equal(t, expectedRecipe.TimeM, updatedRecipe.TimeM)
+			require.Equal(t, expectedRecipe.Category, updatedRecipe.Category)
+			require.Equal(t, expectedRecipe.Ingredients, updatedRecipe.Ingredients)
+			require.Equal(t, expectedRecipe.PrepSteps, updatedRecipe.PrepSteps)
+			require.WithinDuration(t, time.Unix(expectedRecipe.CreatedAt, 0), time.Unix(updatedRecipe.CreatedAt, 0), 1*time.Second)
+			require.WithinDuration(t, time.Unix(expectedRecipe.ModifiedAt, 0), time.Unix(updatedRecipe.ModifiedAt, 0), 1*time.Second)
 		})
 	}
 }

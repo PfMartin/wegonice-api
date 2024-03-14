@@ -59,6 +59,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 	return authorID, nil
 }
 
+// TODO: Aggregate user into the authors
 func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error) {
 	var authors []Author
 
@@ -79,6 +80,7 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	return authors, nil
 }
 
+// TODO: Aggregate user into the author
 func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID string) (Author, error) {
 	var author Author
 

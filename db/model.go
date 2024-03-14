@@ -87,7 +87,7 @@ type PrepStep struct {
 type Recipe struct {
 	ID          string       `bson:"_id" json:"id"`
 	Name        string       `bson:"name" json:"name"`
-	ImageName   string       `bson:"imageName" json:"imageName"`
+	ImageName   string       `bson:"imageName" json:"imageName,omitempty"`
 	RecipeURL   string       `bson:"recipeUrl" json:"recipeUrl,omitempty"`
 	TimeM       int          `bson:"timeM" json:"timeM"`
 	Category    Category     `bson:"category" json:"category"`
@@ -96,7 +96,7 @@ type Recipe struct {
 	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required"`
 	Author      Author       `bson:"author" json:"author"`
 	UserID      string       `bson:"userId" json:"userId,omitempty"`
-	User        User         `bson:"user" json:"user"`
+	UserCreated User         `bson:"user" json:"user"`
 	CreatedAt   int64        `bson:"createdAt" json:"createdAt"`
 	ModifiedAt  int64        `bson:"modifiedAt" json:"modifiedAt"`
 }

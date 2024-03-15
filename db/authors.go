@@ -12,36 +12,33 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// var projectStage = bson.M{
-// 	"$project": bson.M{
-// 		"name":       1,
-// 		"firstName":  1,
-// 		"lastName":   1,
-// 		"website":    1,
-// 		"instagram":  1,
-// 		"youTube":    1,
-// 		"createdAt":  1,
-// 		"imageName":  1,
-// 		"modifiedAt": 1,
-// 		"user":       bson.M{"$first": "$user"}}}
-
-// var getAllAuthorsProject = bson.M{
-// 	"$project": bson.M{
-// 		"name":        1,
-// 		"firstName":   1,
-// 		"lastName":    1,
-// 		"website":     1,
-// 		"instagram":   1,
-// 		"youTube":     1,
-// 		"createdAt":   1,
-// 		"imageName":   1,
-// 		"modifiedAt":  1,
-// 		"recipeCount": bson.M{"$size": "$recipes"},
-// 		"user":        bson.M{"$first": "$user"}}}
-
 type AuthorCollection struct {
 	collection *mongo.Collection
 }
+
+var authorProjection = bson.M{"$project": bson.M{
+	"_id":          1,
+	"name":         1,
+	"firstName":    1,
+	"lastName":     1,
+	"websiteUrl":   1,
+	"instagramUrl": 1,
+	"youtubeUrl":   1,
+	"imageName":    1,
+	"createdAt":    1,
+	"modifiedAt":   1,
+	"userId":       1,
+	"userCreated": bson.M{
+		"$arrayElemAt": bson.A{
+			bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
+				"_id":   "$$userCreated._id",
+				"email": "$$userCreated.email",
+			},
+			},
+			}, 0,
+		},
+	},
+}}
 
 func NewAuthorCollection(dbClient *mongo.Client, dbName string) *AuthorCollection {
 	collection := dbClient.Database(dbName).Collection("authors")
@@ -126,35 +123,8 @@ func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID 
 
 	pipeline := []bson.M{
 		{"$match": bson.M{"_id": primitiveAuthorID}},
-		{"$lookup": bson.M{
-			"from":         "users",
-			"localField":   "userId",
-			"foreignField": "_id",
-			"as":           "user",
-		}},
-		{"$project": bson.M{
-			"_id":          1,
-			"name":         1,
-			"firstName":    1,
-			"lastName":     1,
-			"websiteUrl":   1,
-			"instagramUrl": 1,
-			"youtubeUrl":   1,
-			"imageName":    1,
-			"createdAt":    1,
-			"modifiedAt":   1,
-			"userId":       1,
-			"userCreated": bson.M{
-				"$arrayElemAt": bson.A{
-					bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
-						"_id":   "$$userCreated._id",
-						"email": "$$userCreated.email",
-					},
-					},
-					}, 0,
-				},
-			},
-		}},
+		userLookup,
+		authorProjection,
 		{"$limit": 1},
 	}
 

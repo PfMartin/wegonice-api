@@ -17,6 +17,13 @@ type UserCollection struct {
 	collection *mongo.Collection
 }
 
+var userLookup = bson.M{"$lookup": bson.M{
+	"from":         "users",
+	"localField":   "userId",
+	"foreignField": "_id",
+	"as":           "user",
+}}
+
 func NewUserCollection(dbClient *mongo.Client, dbName string) *UserCollection {
 	collection := dbClient.Database(dbName).Collection("users")
 

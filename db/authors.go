@@ -12,6 +12,33 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// var projectStage = bson.M{
+// 	"$project": bson.M{
+// 		"name":       1,
+// 		"firstName":  1,
+// 		"lastName":   1,
+// 		"website":    1,
+// 		"instagram":  1,
+// 		"youTube":    1,
+// 		"createdAt":  1,
+// 		"imageName":  1,
+// 		"modifiedAt": 1,
+// 		"user":       bson.M{"$first": "$user"}}}
+
+// var getAllAuthorsProject = bson.M{
+// 	"$project": bson.M{
+// 		"name":        1,
+// 		"firstName":   1,
+// 		"lastName":    1,
+// 		"website":     1,
+// 		"instagram":   1,
+// 		"youTube":     1,
+// 		"createdAt":   1,
+// 		"imageName":   1,
+// 		"modifiedAt":  1,
+// 		"recipeCount": bson.M{"$size": "$recipes"},
+// 		"user":        bson.M{"$first": "$user"}}}
+
 type AuthorCollection struct {
 	collection *mongo.Collection
 }
@@ -36,6 +63,12 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 		return primitive.NilObjectID, err
 	}
 
+	primitiveUserID, err := primitive.ObjectIDFromHex(author.UserID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", author.UserID)
+		return primitive.NilObjectID, err
+	}
+
 	insertData := bson.M{
 		"firstName":    author.FirstName,
 		"lastName":     author.LastName,
@@ -44,7 +77,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 		"instagramUrl": author.InstagramURL,
 		"youtubeUrl":   author.YoutubeURL,
 		"imageName":    author.ImageName,
-		"userId":       author.UserID,
+		"userId":       primitiveUserID,
 		"createdAt":    time.Now().Unix(),
 		"modifiedAt":   time.Now().Unix(),
 	}
@@ -91,13 +124,55 @@ func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID 
 		return author, err
 	}
 
-	filter := bson.M{
-		"_id": primitiveAuthorID,
+	pipeline := []bson.M{
+		{"$match": bson.M{"_id": primitiveAuthorID}},
+		{"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "userId",
+			"foreignField": "_id",
+			"as":           "user",
+		}},
+		{"$project": bson.M{
+			"_id":          1,
+			"name":         1,
+			"firstName":    1,
+			"lastName":     1,
+			"websiteUrl":   1,
+			"instagramUrl": 1,
+			"youtubeUrl":   1,
+			"imageName":    1,
+			"createdAt":    1,
+			"modifiedAt":   1,
+			"userId":       1,
+			"userCreated": bson.M{
+				"$arrayElemAt": bson.A{
+					bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
+						"_id":   "$$userCreated._id",
+						"email": "$$userCreated.email",
+					},
+					},
+					}, 0,
+				},
+			},
+		}},
+		{"$limit": 1},
 	}
 
-	if err = authorColl.collection.FindOne(ctx, filter).Decode(&author); err != nil {
-		log.Err(err).Msgf("failed to find author with authorID %s", authorID)
+	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		log.Err(err).Msg("failed to execute pipeline to find author and its user")
 		return author, err
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		log.Error().Msgf("failed to find author with authorID %s", authorID)
+		return author, fmt.Errorf("failed to find author with authorID %s", authorID)
+	}
+
+	if err := cursor.Decode(&author); err != nil {
+		log.Err(err).Msg("failed to decode author")
+		return author, nil
 	}
 
 	return author, nil

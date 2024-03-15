@@ -115,7 +115,7 @@ func TestUnitGetAuthorByID(t *testing.T) {
 		},
 		{
 			name:     "Fail with authorID not found",
-			authorID: "659c00751f717854f690270d",
+			authorID: "659c00751f7178dff690270d",
 			hasError: true,
 		},
 	}
@@ -127,6 +127,11 @@ func TestUnitGetAuthorByID(t *testing.T) {
 			if tc.hasError {
 				require.Error(t, err)
 				return
+			}
+
+			tc.expectedAuthor.UserCreated = User{
+				ID:    user.ID,
+				Email: user.Email,
 			}
 
 			require.NoError(t, err)
@@ -224,7 +229,7 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 	}
 }
 
-func TestDeleteAuthorByID(t *testing.T) {
+func TestUnitDeleteAuthorByID(t *testing.T) {
 	user := createRandomUser(t, getUserCollection(t))
 	authorColl := getAuthorCollection(t)
 	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
@@ -250,7 +255,7 @@ func TestDeleteAuthorByID(t *testing.T) {
 		},
 		{
 			name:        "Fail with authorID not found",
-			authorID:    "659c00751f717854f690270d",
+			authorID:    "659c00751f717df4f690270d",
 			hasError:    false,
 			deleteCount: 0,
 		},

@@ -151,7 +151,13 @@ func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID strin
 func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
 	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
-	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"userId": userID})
+	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
+		return 0, err
+	}
+
+	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +169,7 @@ func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID strin
 
 	authorColl := NewAuthorCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
-	count, err = authorColl.collection.CountDocuments(ctx, bson.M{"userId": userID})
+	count, err = authorColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
 	if err != nil {
 		return 0, err
 	}
@@ -171,12 +177,6 @@ func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID strin
 	if count > 0 {
 		log.Error().Msg("can't delete user because it is referenced in at least one author.")
 		return 0, fmt.Errorf("can't delete user because it is referenced in at least one author")
-	}
-
-	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
-		return 0, err
 	}
 
 	filter := bson.M{

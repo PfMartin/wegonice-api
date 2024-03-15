@@ -235,19 +235,19 @@ func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, author
 func (authorColl *AuthorCollection) DeleteAuthorByID(ctx context.Context, authorID string) (int64, error) {
 	recipeColl := NewRecipeCollection(authorColl.collection.Database().Client(), authorColl.collection.Database().Name())
 
-	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"authorId": authorID})
+	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
+		return 0, err
+	}
+
+	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"authorId": primitiveAuthorID})
 	if err != nil {
 		return 0, err
 	}
 	if count > 0 {
 		log.Error().Msg("can't delete author because it is referenced in at least one recipe.")
 		return 0, fmt.Errorf("can't delete author because it is referenced in at least one recipe")
-	}
-
-	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
-	if err != nil {
-		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
-		return 0, err
 	}
 
 	filter := bson.M{

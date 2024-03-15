@@ -35,6 +35,18 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 		return primitive.NilObjectID, err
 	}
 
+	primitiveAuthorID, err := primitive.ObjectIDFromHex(recipe.AuthorID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", recipe.AuthorID)
+		return primitive.NilObjectID, err
+	}
+
+	primitiveUserID, err := primitive.ObjectIDFromHex(recipe.UserID)
+	if err != nil {
+		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", recipe.UserID)
+		return primitive.NilObjectID, err
+	}
+
 	insertData := bson.M{
 		"name":        recipe.Name,
 		"imageName":   recipe.ImageName,
@@ -43,8 +55,8 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 		"category":    recipe.Category,
 		"ingredients": recipe.Ingredients,
 		"prepSteps":   recipe.PrepSteps,
-		"authorId":    recipe.AuthorID,
-		"userId":      recipe.UserID,
+		"authorId":    primitiveAuthorID,
+		"userId":      primitiveUserID,
 		"createdAt":   time.Now().Unix(),
 		"modifiedAt":  time.Now().Unix(),
 	}

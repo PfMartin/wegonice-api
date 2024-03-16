@@ -1,6 +1,7 @@
 package db
 
 import (
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -15,6 +16,14 @@ func (pagination *Pagination) getFindOptions() *options.FindOptions {
 	findOptions.SetLimit(pagination.PageSize)
 
 	return findOptions
+}
+
+func (pagination *Pagination) getSkipStage() bson.M {
+	return bson.M{"$skip": (pagination.PageID - 1) * pagination.PageSize}
+}
+
+func (pagination *Pagination) getLimitStage() bson.M {
+	return bson.M{"$limit": pagination.PageSize}
 }
 
 type Role string

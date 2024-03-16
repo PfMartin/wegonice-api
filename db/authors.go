@@ -27,7 +27,6 @@ var authorProjection = bson.M{"$project": bson.M{
 	"imageName":    1,
 	"createdAt":    1,
 	"modifiedAt":   1,
-	"userId":       1,
 	"userCreated": bson.M{
 		"$arrayElemAt": bson.A{
 			bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
@@ -97,7 +96,17 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	findOptions := pagination.getFindOptions()
 	findOptions.SetSort(bson.M{"name": 1})
 
-	cursor, err := authorColl.collection.Find(ctx, bson.M{}, findOptions)
+	pipeline := []bson.M{
+		userLookup,
+		authorProjection,
+		{"$sort": bson.M{
+			"name": 1,
+		}},
+		pagination.getSkipStage(),
+		pagination.getLimitStage(),
+	}
+
+	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msg("failed to find author documents")
 		return authors, err

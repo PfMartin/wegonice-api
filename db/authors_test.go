@@ -83,11 +83,18 @@ func TestUnitGetAllAuthors(t *testing.T) {
 	}
 
 	t.Run("Gets all authors with pagination", func(t *testing.T) {
-		authors, err := authorColl.GetAllAuthors(context.Background(), pagination)
+		ctx := context.Background()
+		authors, err := authorColl.GetAllAuthors(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, authors)
 
 		require.Equal(t, int(pagination.PageSize), len(authors))
+
+		for _, author := range authors {
+			require.NotEmpty(t, author.UserCreated.Email)
+			require.NotEmpty(t, author.UserCreated.ID)
+			require.Empty(t, author.UserID)
+		}
 	})
 }
 
@@ -133,6 +140,8 @@ func TestUnitGetAuthorByID(t *testing.T) {
 				ID:    user.ID,
 				Email: user.Email,
 			}
+
+			tc.expectedAuthor.UserID = ""
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedAuthor, gotAuthor)

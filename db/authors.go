@@ -89,12 +89,8 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 	return authorID, nil
 }
 
-// TODO: Aggregate user into the authors
 func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error) {
 	var authors []Author
-
-	findOptions := pagination.getFindOptions()
-	findOptions.SetSort(bson.M{"name": 1})
 
 	pipeline := []bson.M{
 		userLookup,

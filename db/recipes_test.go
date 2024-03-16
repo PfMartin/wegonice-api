@@ -150,11 +150,30 @@ func TestUnitGetAllRecipes(t *testing.T) {
 	}
 
 	t.Run("Gets all recipes with pagination", func(t *testing.T) {
-		recipes, err := recipeColl.GetAllRecipes(context.Background(), pagination)
+		ctx := context.Background()
+		recipes, err := recipeColl.GetAllRecipes(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, recipes)
 
 		require.Equal(t, int(pagination.PageSize), len(recipes))
+
+		for _, recipe := range recipes {
+			require.NotEmpty(t, recipe.Author)
+			require.NotEmpty(t, recipe.Author.Name)
+			require.NotEmpty(t, recipe.Author.FirstName)
+			require.NotEmpty(t, recipe.Author.LastName)
+			require.NotEmpty(t, recipe.Author.WebsiteURL)
+			require.NotEmpty(t, recipe.Author.YoutubeURL)
+			require.NotEmpty(t, recipe.Author.ImageName)
+			require.NotEmpty(t, recipe.Author.UserID)
+
+			require.NotEmpty(t, recipe.UserCreated)
+			require.NotEmpty(t, recipe.UserCreated.ID)
+			require.NotEmpty(t, recipe.UserCreated.Email)
+
+			require.Empty(t, recipe.UserID)
+			require.Empty(t, recipe.AuthorID)
+		}
 	})
 }
 

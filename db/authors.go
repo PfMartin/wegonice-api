@@ -20,7 +20,7 @@ var authorLookupStage = bson.M{"$lookup": bson.M{
 	"from":         "authors",
 	"localField":   "authorId",
 	"foreignField": "_id",
-	"as":           "author",
+	"as":           "recipeAuthor",
 }}
 
 var authorProjectStage = bson.M{"$project": bson.M{
@@ -109,7 +109,7 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 
 	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		log.Err(err).Msg("failed to find author documents")
+		log.Err(err).Msg("failed to aggregate author documents")
 		return authors, err
 	}
 

@@ -27,19 +27,9 @@ var recipeProjectStage = bson.M{"$project": bson.M{
 	"prepSteps":   1,
 	"createdAt":   1,
 	"modifiedAt":  1,
-	"userCreated": bson.M{
-		"$arrayElemAt": bson.A{
-			bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
-				"_id":   "$$userCreated._id",
-				"email": "$$userCreated.email",
-			},
-			},
-			}, 0,
-		},
-	},
 	"author": bson.M{
 		"$arrayElemAt": bson.A{
-			bson.M{"$map": bson.M{"input": "$author", "as": "author", "in": bson.M{
+			bson.M{"$map": bson.M{"input": "$recipeAuthor", "as": "author", "in": bson.M{
 				"_id":          "$$author._id",
 				"name":         "$$author.name",
 				"firstName":    "$$author.firstName",
@@ -49,6 +39,16 @@ var recipeProjectStage = bson.M{"$project": bson.M{
 				"youtubeUrl":   "$$author.youtubeUrl",
 				"imageName":    "$$author.imageName",
 				"userId":       "$$author.userId",
+			},
+			},
+			}, 0,
+		},
+	},
+	"userCreated": bson.M{
+		"$arrayElemAt": bson.A{
+			bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
+				"_id":   "$$userCreated._id",
+				"email": "$$userCreated.email",
 			},
 			},
 			}, 0,
@@ -113,16 +113,21 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 	return recipeID, nil
 }
 
-// TODO: Aggregate Author and User into the recipes
 func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, pagination Pagination) ([]Recipe, error) {
 	var recipes []Recipe
 
-	findOptions := pagination.getFindOptions()
-	findOptions.SetSort(bson.M{"name": 1})
+	pipeline := []bson.M{
+		userLookupStage,
+		authorLookupStage,
+		recipeProjectStage,
+		getSortStage("name"),
+		pagination.getSkipStage(),
+		pagination.getLimitStage(),
+	}
 
-	cursor, err := recipeColl.collection.Find(ctx, bson.M{}, findOptions)
+	cursor, err := recipeColl.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		log.Err(err).Msg("failed to find recipe documents")
+		log.Err(err).Msg("failed to aggregate recipe documents")
 		return recipes, err
 	}
 
@@ -134,7 +139,6 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 	return recipes, nil
 }
 
-// TODO: Aggregate author and user into the recipe
 func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error) {
 	var recipe Recipe
 

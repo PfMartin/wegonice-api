@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -13,6 +14,47 @@ import (
 
 type RecipeCollection struct {
 	collection *mongo.Collection
+}
+
+var recipeProjectStage = bson.M{"$project": bson.M{
+	"_id":         1,
+	"name":        1,
+	"imageName":   1,
+	"recipeUrl":   1,
+	"timeM":       1,
+	"category":    1,
+	"ingredients": 1,
+	"prepSteps":   1,
+	"createdAt":   1,
+	"modifiedAt":  1,
+	"userCreated": bson.M{
+		"$arrayElemAt": bson.A{
+			bson.M{"$map": bson.M{"input": "$user", "as": "userCreated", "in": bson.M{
+				"_id":   "$$userCreated._id",
+				"email": "$$userCreated.email",
+			},
+			},
+			}, 0,
+		},
+	},
+	"author": bson.M{
+		"$arrayElemAt": bson.A{
+			bson.M{"$map": bson.M{"input": "$author", "as": "author", "in": bson.M{
+				"_id":          "$$author._id",
+				"name":         "$$author.name",
+				"firstName":    "$$author.firstName",
+				"lastName":     "$$author.lastName",
+				"websiteUrl":   "$$author.websiteUrl",
+				"instagramUrl": "$$author.instagramUrl",
+				"youtubeUrl":   "$$author.youtubeUrl",
+				"imageName":    "$$author.imageName",
+				"userId":       "$$author.userId",
+			},
+			},
+			}, 0,
+		},
+	},
+},
 }
 
 func NewRecipeCollection(dbClient *mongo.Client, dbName string) *RecipeCollection {
@@ -102,13 +144,29 @@ func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID 
 		return recipe, err
 	}
 
-	filter := bson.M{
-		"_id": primitiveRecipeID,
+	pipeline := []bson.M{
+		{"$match": bson.M{"_id": primitiveRecipeID}}, // TODO: Generic function for this
+		userLookupStage,
+		authorLookupStage,
+		recipeProjectStage,
+		{"$limit": 1},
 	}
 
-	if err = recipeColl.collection.FindOne(ctx, filter).Decode(&recipe); err != nil {
-		log.Err(err).Msgf("failed to find recipe with recipeID %s", recipeID)
+	cursor, err := recipeColl.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		log.Err(err).Msgf("failed to execute pipeline to find recipe with recipeID %s and its user and its author", recipeID)
 		return recipe, err
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		log.Error().Msgf("failed to find recipe with recipeID %s", recipeID)
+		return recipe, fmt.Errorf("failed to find recipe with recipeID %s", recipeID)
+	}
+
+	if err := cursor.Decode(&recipe); err != nil {
+		log.Err(err).Msg("failed to decode recipe")
+		return recipe, nil
 	}
 
 	return recipe, nil

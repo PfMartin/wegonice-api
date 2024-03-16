@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -35,4 +36,8 @@ func NewDatabaseClient(authSource string, username string, password string, uri 
 	log.Info().Msg("Connected to database")
 
 	return dbClient, cancel
+}
+
+func getSortStage(key string) bson.M {
+	return bson.M{"$sort": bson.M{key: 1}}
 }

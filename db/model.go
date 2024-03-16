@@ -105,7 +105,7 @@ type Recipe struct {
 	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required"`
 	Author      Author       `bson:"author" json:"author"`
 	UserID      string       `bson:"userId" json:"userId,omitempty"`
-	UserCreated User         `bson:"user" json:"user"`
+	UserCreated User         `bson:"userCreated" json:"userCreated"`
 	CreatedAt   int64        `bson:"createdAt" json:"createdAt"`
 	ModifiedAt  int64        `bson:"modifiedAt" json:"modifiedAt"`
 }

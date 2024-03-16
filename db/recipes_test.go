@@ -198,6 +198,26 @@ func TestUnitGetRecipeByID(t *testing.T) {
 				return
 			}
 
+			tc.expectedRecipe.UserCreated = User{
+				ID:    user.ID,
+				Email: user.Email,
+			}
+
+			tc.expectedRecipe.Author = Author{
+				ID:           author.ID,
+				Name:         author.Name,
+				FirstName:    author.FirstName,
+				LastName:     author.LastName,
+				WebsiteURL:   author.WebsiteURL,
+				InstagramURL: author.InstagramURL,
+				YoutubeURL:   author.YoutubeURL,
+				ImageName:    author.ImageName,
+				UserID:       author.UserID,
+			}
+
+			tc.expectedRecipe.AuthorID = ""
+			tc.expectedRecipe.UserID = ""
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRecipe, gotRecipe)
 		})

@@ -16,7 +16,14 @@ type AuthorCollection struct {
 	collection *mongo.Collection
 }
 
-var authorProjection = bson.M{"$project": bson.M{
+var authorLookupStage = bson.M{"$lookup": bson.M{
+	"from":         "authors",
+	"localField":   "authorId",
+	"foreignField": "_id",
+	"as":           "author",
+}}
+
+var authorProjectStage = bson.M{"$project": bson.M{
 	"_id":          1,
 	"name":         1,
 	"firstName":    1,
@@ -93,11 +100,9 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	var authors []Author
 
 	pipeline := []bson.M{
-		userLookup,
-		authorProjection,
-		{"$sort": bson.M{
-			"name": 1,
-		}},
+		userLookupStage,
+		authorProjectStage,
+		getSortStage("name"),
 		pagination.getSkipStage(),
 		pagination.getLimitStage(),
 	}
@@ -116,7 +121,6 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	return authors, nil
 }
 
-// TODO: Aggregate user into the author
 func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID string) (Author, error) {
 	var author Author
 
@@ -128,14 +132,14 @@ func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID 
 
 	pipeline := []bson.M{
 		{"$match": bson.M{"_id": primitiveAuthorID}},
-		userLookup,
-		authorProjection,
+		userLookupStage,
+		authorProjectStage,
 		{"$limit": 1},
 	}
 
 	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		log.Err(err).Msg("failed to execute pipeline to find author and its user")
+		log.Err(err).Msgf("failed to execute pipeline to find author with authorID %s and its user", authorID)
 		return author, err
 	}
 	defer cursor.Close(ctx)

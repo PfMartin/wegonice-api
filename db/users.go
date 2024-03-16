@@ -17,7 +17,7 @@ type UserCollection struct {
 	collection *mongo.Collection
 }
 
-var userLookup = bson.M{"$lookup": bson.M{
+var userLookupStage = bson.M{"$lookup": bson.M{
 	"from":         "users",
 	"localField":   "userId",
 	"foreignField": "_id",
@@ -156,13 +156,13 @@ func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID strin
 }
 
 func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
-	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
-
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
 		return 0, err
 	}
+
+	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
 	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
 	if err != nil {

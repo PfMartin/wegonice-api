@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -155,10 +154,6 @@ func TestUnitGetAllRecipes(t *testing.T) {
 		recipes, err := recipeColl.GetAllRecipes(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, recipes)
-
-		for _, r := range recipes {
-			fmt.Println(r.Author)
-		}
 
 		require.Equal(t, int(pagination.PageSize), len(recipes))
 

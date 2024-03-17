@@ -17,3 +17,13 @@ make db-create-user`
 ```zsh
 make db-connect
 ```
+
+## Create swagger documentation
+
+1. Install swag
+2. Generate swagger documentation
+
+```zsh
+make get-swag
+make docs
+```

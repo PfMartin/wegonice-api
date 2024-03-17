@@ -85,13 +85,13 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 		"modifiedAt":   time.Now().Unix(),
 	}
 
-	cursor, err := authorColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := authorColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
 		log.Err(err).Msgf("failed to insert author with name %s", author.Name)
 		return primitive.NilObjectID, err
 	}
 
-	authorID := cursor.InsertedID.(primitive.ObjectID)
+	authorID := insertResult.InsertedID.(primitive.ObjectID)
 
 	return authorID, nil
 }
@@ -112,6 +112,7 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 		log.Err(err).Msg("failed to aggregate author documents")
 		return authors, err
 	}
+	defer cursor.Close(ctx)
 
 	if err = cursor.All(ctx, &authors); err != nil {
 		log.Err(err).Msg("failed to parse author documents")

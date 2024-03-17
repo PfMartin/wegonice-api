@@ -103,12 +103,12 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 		"modifiedAt":  time.Now().Unix(),
 	}
 
-	cursor, err := recipeColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := recipeColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
 
-	recipeID := cursor.InsertedID.(primitive.ObjectID)
+	recipeID := insertResult.InsertedID.(primitive.ObjectID)
 
 	return recipeID, nil
 }
@@ -130,6 +130,7 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 		log.Err(err).Msg("failed to aggregate recipe documents")
 		return recipes, err
 	}
+	defer cursor.Close(ctx)
 
 	if err = cursor.All(ctx, &recipes); err != nil {
 		log.Err(err).Msg("failed to parse recipe documents")
@@ -190,7 +191,6 @@ func (recipeColl *RecipeCollection) UpdateRecipeByID(ctx context.Context, recipe
 	update := bson.M{
 		"$set": bson.M{"modifiedAt": time.Now().Unix()},
 	}
-	// TODO: Create generic function for this
 	if recipeUpdate.Name != "" {
 		update["$set"].(bson.M)["name"] = recipeUpdate.Name
 	}

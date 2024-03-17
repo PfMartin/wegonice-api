@@ -58,13 +58,13 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 		"modifiedAt":   time.Now().Unix(),
 	}
 
-	cursor, err := userColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := userColl.collection.InsertOne(ctx, insertData)
 	if err != nil {
 		log.Err(err).Msgf("failed to insert user with email %s", user.Email)
 		return primitive.NilObjectID, err
 	}
 
-	userID := cursor.InsertedID.(primitive.ObjectID)
+	userID := insertResult.InsertedID.(primitive.ObjectID)
 
 	return userID, nil
 }
@@ -80,6 +80,7 @@ func (userColl *UserCollection) GetAllUsers(ctx context.Context, pagination Pagi
 		log.Err(err).Msg("failed to find user documents")
 		return users, err
 	}
+	defer cursor.Close(ctx)
 
 	if err = cursor.All(ctx, &users); err != nil {
 		log.Err(err).Msg("failed to parse user documents")
@@ -164,6 +165,7 @@ func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID strin
 
 	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
+	// TODO: Make this a generic function and pass in collection, key, objectID
 	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
 	if err != nil {
 		return 0, err

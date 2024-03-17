@@ -239,9 +239,12 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 }
 
 func TestUnitDeleteAuthorByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
+	userColl := getUserCollection(t)
+	user := createRandomUser(t, userColl)
 	authorColl := getAuthorCollection(t)
 	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+	recipeUser := createRandomUser(t, userColl)
+	recipeAuthor := createRandomAuthor(t, authorColl, recipeUser.ID)
 
 	testCases := []struct {
 		name                 string
@@ -270,7 +273,7 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 		},
 		{
 			name:                 "Fail with author referenced in at least one recipes",
-			authorID:             createdAuthor.ID,
+			authorID:             recipeAuthor.ID,
 			hasError:             true,
 			hasReferencingRecipe: true,
 			deleteCount:          0,
@@ -280,7 +283,7 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.hasReferencingRecipe {
-				createRandomRecipe(t, getRecipeCollection(t), user.ID, createdAuthor.ID)
+				createRandomRecipe(t, getRecipeCollection(t), recipeUser.ID, recipeAuthor.ID)
 			}
 
 			deleteCount, err := authorColl.DeleteAuthorByID(context.Background(), tc.authorID)

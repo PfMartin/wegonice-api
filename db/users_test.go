@@ -7,7 +7,6 @@ import (
 
 	"github.com/PfMartin/wegonice-api/util"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getUserCollection(t *testing.T) *UserCollection {
@@ -214,9 +213,13 @@ func TestUnitUpdateUserByID(t *testing.T) {
 }
 
 func TestUnitDeleteUserByID(t *testing.T) {
-	coll := getUserCollection(t)
+	userColl := getUserCollection(t)
 
-	createdUser := createRandomUser(t, coll)
+	createdUser := createRandomUser(t, userColl)
+	authorUser := createRandomUser(t, userColl)
+	recipeUser := createRandomUser(t, userColl)
+
+	recipeAuthor := createRandomAuthor(t, getAuthorCollection(t), recipeUser.ID)
 
 	testCases := []struct {
 		name                 string
@@ -246,14 +249,14 @@ func TestUnitDeleteUserByID(t *testing.T) {
 		},
 		{
 			name:                 "Fail due to referencing author",
-			userID:               createdUser.ID,
+			userID:               authorUser.ID,
 			hasError:             true,
 			hasReferencingAuthor: true,
 			deleteCount:          0,
 		},
 		{
 			name:                 "Fail due to referencing recipe",
-			userID:               createdUser.ID,
+			userID:               recipeUser.ID,
 			hasError:             true,
 			hasReferencingRecipe: true,
 			deleteCount:          0,
@@ -263,14 +266,14 @@ func TestUnitDeleteUserByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.hasReferencingAuthor {
-				createRandomAuthor(t, getAuthorCollection(t), tc.userID)
+				createRandomAuthor(t, getAuthorCollection(t), authorUser.ID)
 			}
 
 			if tc.hasReferencingRecipe {
-				createRandomRecipe(t, getRecipeCollection(t), tc.userID, primitive.NewObjectID().Hex())
+				createRandomRecipe(t, getRecipeCollection(t), recipeUser.ID, recipeAuthor.ID)
 			}
 
-			deleteCount, err := coll.DeleteUserByID(context.Background(), tc.userID)
+			deleteCount, err := userColl.DeleteUserByID(context.Background(), tc.userID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 
 			if tc.hasError {

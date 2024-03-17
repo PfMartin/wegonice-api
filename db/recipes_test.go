@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -141,7 +142,8 @@ func TestUnitGetAllRecipes(t *testing.T) {
 	recipeColl := getRecipeCollection(t)
 
 	for i := 0; i < 10; i++ {
-		_ = createRandomRecipe(t, recipeColl, user.ID, author.ID)
+		r := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+		fmt.Println(r.AuthorID)
 	}
 
 	pagination := Pagination{
@@ -152,6 +154,12 @@ func TestUnitGetAllRecipes(t *testing.T) {
 	t.Run("Gets all recipes with pagination", func(t *testing.T) {
 		ctx := context.Background()
 		recipes, err := recipeColl.GetAllRecipes(ctx, pagination)
+
+		for _, recipe := range recipes {
+			fmt.Print(recipe.Name + " | ")
+			fmt.Print(recipe.Author.Name + "\n")
+		}
+
 		require.NoError(t, err)
 		require.NotEmpty(t, recipes)
 

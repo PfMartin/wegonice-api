@@ -23,4 +23,4 @@ go.work
 db/db-data/
 
 # Swagger documentation
-api/v1/docs
+api/v1/docs/

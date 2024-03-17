@@ -91,6 +91,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{env.GO_VERSION}}
+
+      - name: Build docs
+        run: make docs
       
       - name: Build binary
         run: go build .

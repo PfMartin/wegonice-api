@@ -1,0 +1,23 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {
+            "name": "Martin Pfatrisch",
+            "url": "https://github.com/PfMartin",
+            "email": "martinpfatrisch@gmail.com"
+        },
+        "license": {
+            "name": "All Rights Reserved"
+        }
+    },
+    "paths": {},
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
+        }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
+    }
+}

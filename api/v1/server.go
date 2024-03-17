@@ -2,6 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -30,6 +32,7 @@ func (server *Server) setupRoutes() {
 	v1Routes := router.Group("/api/v1")
 
 	v1Routes.GET("/heartbeat", server.getHeartbeat)
+	v1Routes.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	server.router = router
 }

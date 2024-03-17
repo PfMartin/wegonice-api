@@ -1,0 +1,15 @@
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+info:
+  contact:
+    email: martinpfatrisch@gmail.com
+    name: Martin Pfatrisch
+    url: https://github.com/PfMartin
+  license:
+    name: All Rights Reserved
+paths: {}
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

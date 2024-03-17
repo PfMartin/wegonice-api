@@ -92,6 +92,9 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
 
+      - name: Install swag
+        run: make get-swag
+
       - name: Build docs
         run: make docs
       

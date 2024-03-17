@@ -11,14 +11,16 @@ type Server struct {
 	dbClient *mongo.Client
 	dbName   string
 	url      string
+	basePath string
 	router   *gin.Engine
 }
 
-func NewServer(dbClient *mongo.Client, dbName string, url string) *Server {
+func NewServer(dbClient *mongo.Client, dbName string, url string, basePath string) *Server {
 	server := &Server{
 		dbClient: dbClient,
 		dbName:   dbName,
 		url:      url,
+		basePath: basePath,
 	}
 
 	server.setupRoutes()
@@ -29,7 +31,7 @@ func NewServer(dbClient *mongo.Client, dbName string, url string) *Server {
 func (server *Server) setupRoutes() {
 	router := gin.Default()
 
-	v1Routes := router.Group("/api/v1")
+	v1Routes := router.Group(server.basePath)
 
 	v1Routes.GET("/heartbeat", server.getHeartbeat)
 	v1Routes.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

@@ -38,13 +38,6 @@ func printBanner() {
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
-	docs.SwaggerInfo.Title = "WeGoNice API"
-	docs.SwaggerInfo.Description = "This is the WeGoNice API for vegan recipes."
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:8000"
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
-
 	printBanner()
 
 	logging.NewLogger()
@@ -55,11 +48,18 @@ func main() {
 		return
 	}
 
+	docs.SwaggerInfo.Title = "WeGoNice API"
+	docs.SwaggerInfo.Description = "This is the WeGoNice API for managing vegan recipes and authors."
+	docs.SwaggerInfo.Version = conf.APIVersion
+	docs.SwaggerInfo.Host = conf.APIURL
+	docs.SwaggerInfo.BasePath = conf.APIBasePath
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
 	dbClient, cancel := db.NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 	_ = db.NewUserCollection(dbClient, conf.DBName)
 	_ = db.NewAuthorCollection(dbClient, conf.DBName)
 
-	server := api.NewServer(dbClient, conf.DBName, conf.APIURL)
+	server := api.NewServer(dbClient, conf.DBName, conf.APIURL, conf.APIBasePath)
 	if err = server.Start(); err != nil {
 		log.Err(err).Msg("failed to start server")
 		return

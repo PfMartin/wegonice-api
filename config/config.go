@@ -11,6 +11,7 @@ type Config struct {
 	DBUser     string `mapstructure:"WEGONICE_USER"`
 	DBPassword string `mapstructure:"WEGONICE_PWD"`
 	DBURI      string `mapstructure:"WEGONICE_URI"`
+	APIURL     string `mapstructure:"API_URL"`
 }
 
 func NewConfig(configPath string, configName string) (config Config, err error) {

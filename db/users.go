@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/PfMartin/wegonice-api/util"
@@ -165,27 +164,14 @@ func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID strin
 
 	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
-	// TODO: Make this a generic function and pass in collection, key, objectID
-	count, err := recipeColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
-	if err != nil {
+	if err = checkReferencesOfDocument(ctx, recipeColl.collection, "userId", primitiveUserID); err != nil {
 		return 0, err
-	}
-
-	if count > 0 {
-		log.Error().Msg("can't delete user because it is referenced in at least one recipe.")
-		return 0, fmt.Errorf("can't delete user because it is referenced in at least one recipe")
 	}
 
 	authorColl := NewAuthorCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
 
-	count, err = authorColl.collection.CountDocuments(ctx, bson.M{"userId": primitiveUserID})
-	if err != nil {
+	if err = checkReferencesOfDocument(ctx, authorColl.collection, "userId", primitiveUserID); err != nil {
 		return 0, err
-	}
-
-	if count > 0 {
-		log.Error().Msg("can't delete user because it is referenced in at least one author.")
-		return 0, fmt.Errorf("can't delete user because it is referenced in at least one author")
 	}
 
 	filter := bson.M{

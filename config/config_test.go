@@ -15,5 +15,9 @@ func TestUnitGetConfig(t *testing.T) {
 		require.Equal(t, "niceUser", conf.DBUser)
 		require.Equal(t, "nicePassword", conf.DBPassword)
 		require.Equal(t, "mongodb://localhost:27017", conf.DBURI)
+
+		require.Equal(t, "localhost:8000", conf.APIURL)
+		require.Equal(t, "1.0", conf.APIVersion)
+		require.Equal(t, "/api/v1", conf.APIBasePath)
 	})
 }

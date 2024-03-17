@@ -15,3 +15,9 @@ db-create-user:
 
 db-connect:
 	docker exec -it wegonice-db mongosh "mongodb://${WEGONICE_USER}:${WEGONICE_PWD}@localhost:27017/wegonice?authSource=${WEGONICE_DB}"
+
+get-swag:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+docs:
+	swag init -o ./api/v1/docs

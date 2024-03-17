@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/PfMartin/wegonice-api/config"
@@ -8,7 +9,21 @@ import (
 	"github.com/PfMartin/wegonice-api/logging"
 )
 
+func printBanner() {
+	fmt.Print(`
+██╗    ██╗███████╗ ██████╗  ██████╗ ███╗   ██╗██╗ ██████╗███████╗     █████╗ ██████╗ ██╗
+██║    ██║██╔════╝██╔════╝ ██╔═══██╗████╗  ██║██║██╔════╝██╔════╝    ██╔══██╗██╔══██╗██║
+██║ █╗ ██║█████╗  ██║  ███╗██║   ██║██╔██╗ ██║██║██║     █████╗█████╗███████║██████╔╝██║
+██║███╗██║██╔══╝  ██║   ██║██║   ██║██║╚██╗██║██║██║     ██╔══╝╚════╝██╔══██║██╔═══╝ ██║
+╚███╔███╔╝███████╗╚██████╔╝╚██████╔╝██║ ╚████║██║╚██████╗███████╗    ██║  ██║██║     ██║
+ ╚══╝╚══╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═╝ ╚═════╝╚══════╝    ╚═╝  ╚═╝╚═╝     ╚═╝
+																																												
+`)
+}
+
 func main() {
+	printBanner()
+
 	logging.NewLogger()
 
 	conf, err := config.NewConfig("./", ".env")
@@ -16,6 +31,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, cancel := db.NewDatabase(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
+	dbClient, cancel := db.NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
+	_ = db.NewUserCollection(dbClient, conf.DBName)
+	_ = db.NewAuthorCollection(dbClient, conf.DBName)
+
+	// TODO: Create Server and add all the db handlers as property
+
 	defer cancel()
 }

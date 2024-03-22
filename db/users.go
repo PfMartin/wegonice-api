@@ -49,6 +49,10 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 		return primitive.NilObjectID, err
 	}
 
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
 	insertData := bson.M{
 		"email":        user.Email,
 		"passwordHash": hashedPassword,

@@ -59,7 +59,7 @@ func main() {
 	_ = db.NewUserCollection(dbClient, conf.DBName)
 	_ = db.NewAuthorCollection(dbClient, conf.DBName)
 
-	server := api.NewServer(dbClient, conf.DBName, conf.APIURL, conf.APIBasePath)
+	server := api.NewServer(dbClient, conf.DBName, conf.APIURL, conf.APIBasePath, conf.TokenSymmetricKey)
 	if err = server.Start(); err != nil {
 		log.Err(err).Msg("failed to start server")
 		return

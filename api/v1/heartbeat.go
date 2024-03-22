@@ -11,7 +11,7 @@ type heartbeatResponse struct {
 } // @name heartbeatResponse
 
 // getHeartbeat
-// @Summary 			Check heart beat
+// @Summary 			Check heartbeat
 // @Schemes 			http,https
 // @Description 	Check if the API is reachable with this route
 // @Tags 					heartbeat

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/o1egl/paseto"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -38,9 +39,10 @@ func (maker *PasetoMaker) CreateToken(userID string, duration time.Duration) (st
 }
 
 func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) {
-	var payload *Payload
+	payload := &Payload{}
 	err := maker.paseto.Decrypt(token, maker.symmetricKey, payload, nil)
 	if err != nil {
+		log.Err(err).Msgf("%s", ErrInvalidToken)
 		return nil, ErrInvalidToken
 	}
 

@@ -18,6 +18,7 @@ var sessionProjectStage = bson.M{"$project": bson.M{
 	"_id":          1,
 	"refreshToken": 1,
 	"userAgent":    1,
+	"isBlocked":    1,
 	"clientIp":     1,
 	"expiresAt":    1,
 	"user": bson.M{
@@ -45,6 +46,7 @@ func (sessionColl *SessionCollection) CreateSession(ctx context.Context, session
 		"userId":       session.UserID,
 		"refreshToken": session.RefreshToken,
 		"userAgent":    session.UserAgent,
+		"isBlocked":    session.IsBlocked,
 		"clientIp":     session.ClientIP,
 		"expiresAt":    session.ExpiresAt,
 	}

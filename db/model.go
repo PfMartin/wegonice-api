@@ -1,8 +1,6 @@
 package db
 
 import (
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -46,13 +44,14 @@ type User struct {
 }
 
 type Session struct {
-	ID           string    `bson:"_id" json:"id"`
-	UserID       string    `bson:"userId" json:"userId"`
-	User         User      `bson:"user" json:"user"`
-	RefreshToken string    `bson:"refreshToken" json:"refreshToken"`
-	UserAgent    string    `bson:"userAgent" json:"userAgent"`
-	ClientIP     string    `bson:"isBlocked" json:"isBlocked"`
-	ExpiresAt    time.Time `bson:"expiresAt" json:"expiresAt"`
+	ID           string `bson:"_id" json:"id"`
+	UserID       string `bson:"userId" json:"userId"`
+	User         User   `bson:"user" json:"user"`
+	RefreshToken string `bson:"refreshToken" json:"refreshToken"`
+	UserAgent    string `bson:"userAgent" json:"userAgent"`
+	IsBlocked    bool   `bson:"isBlocked" json:"isBlocked"`
+	ClientIP     string `bson:"clientIp" json:"clientIp"`
+	ExpiresAt    int64  `bson:"expiresAt" json:"expiresAt"`
 }
 
 type Author struct {

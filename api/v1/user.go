@@ -8,22 +8,12 @@ import (
 	"github.com/PfMartin/wegonice-api/db"
 	"github.com/PfMartin/wegonice-api/util"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type authUserBody struct {
 	Email    string `json:"email,omitempty" binding:"required"`
 	Password string `json:"password,omitempty" binding:"required,min=6"`
 } // @name authUserBody
-
-type registerResponse struct {
-	SessionID             uuid.UUID `json:"sessionId"`
-	AccessToken           string    `json:"accessToken"`
-	AccessTokenExpiresAt  time.Time `json:"accessTokenExpiresAt"`
-	RefreshToken          string    `json:"refreshToken"`
-	RefreshTokenExpiresAt time.Time `json:"refreshTokenExpiresAt"`
-	UserID                string    `json:"userId"`
-} // @name registerResponse
 
 func (server *Server) registerUser(ctx *gin.Context) {
 	var credentials authUserBody

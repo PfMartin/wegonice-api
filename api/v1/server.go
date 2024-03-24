@@ -22,19 +22,11 @@ type ServerConfig struct {
 	dbName               string
 	url                  string
 	basePath             string
-	tokenSymmetricKey    string
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 }
 
-func NewServer(
-	dbClient *mongo.Client,
-	dbName string, url string,
-	basePath string,
-	tokenSymmetricKey string,
-	accessTokenDuration time.Duration,
-	refreshTokenDuration time.Duration,
-) *Server {
+func NewServer(dbClient *mongo.Client, dbName string, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
 		log.Err(err).Msg("cannot create token maker")
@@ -42,10 +34,12 @@ func NewServer(
 	}
 
 	config := ServerConfig{
-		dbClient: dbClient,
-		dbName:   dbName,
-		url:      url,
-		basePath: basePath,
+		dbClient:             dbClient,
+		dbName:               dbName,
+		url:                  url,
+		basePath:             basePath,
+		accessTokenDuration:  accessTokenDuration,
+		refreshTokenDuration: refreshTokenDuration,
 	}
 
 	server := &Server{

@@ -93,6 +93,21 @@ func (userColl *UserCollection) GetAllUsers(ctx context.Context, pagination Pagi
 	return users, nil
 }
 
+func (userColl *UserCollection) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	var user User
+
+	filter := bson.M{
+		"email": email,
+	}
+
+	if err := userColl.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		log.Err(err).Msgf("failed to find user with email %s", email)
+		return user, err
+	}
+
+	return user, nil
+}
+
 func (userColl *UserCollection) GetUserByID(ctx context.Context, userID string) (User, error) {
 	var user User
 

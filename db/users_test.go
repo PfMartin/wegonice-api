@@ -136,6 +136,49 @@ func TestUnitGetUserByID(t *testing.T) {
 	}
 }
 
+func TestUnitGetUserByEmail(t *testing.T) {
+	coll := getUserCollection(t)
+
+	createdUser := createRandomUser(t, coll)
+
+	testCases := []struct {
+		name         string
+		email        string
+		hasError     bool
+		expectedUser User
+	}{
+		{
+			name:         "Success",
+			email:        createdUser.Email,
+			hasError:     false,
+			expectedUser: createdUser,
+		},
+		{
+			name:     "Fail with email not found",
+			email:    "test@email.com",
+			hasError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotUser, err := coll.GetUserByEmail(context.Background(), tc.email)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedUser.Email, gotUser.Email)
+			require.NoError(t, util.CheckPassword(tc.expectedUser.Password, gotUser.PasswordHash))
+			require.Equal(t, tc.expectedUser.Role, gotUser.Role)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.CreatedAt, 0), time.Unix(gotUser.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.ModifiedAt, 0), time.Unix(gotUser.ModifiedAt, 0), 5*time.Second)
+		})
+	}
+}
+
 func TestUnitUpdateUserByID(t *testing.T) {
 	coll := getUserCollection(t)
 

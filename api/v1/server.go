@@ -43,8 +43,12 @@ func (server *Server) setupRoutes() {
 
 	v1Routes := router.Group(server.basePath)
 
-	v1Routes.GET("/heartbeat", server.getHeartbeat)
 	v1Routes.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	v1Routes.GET("/heartbeat", server.getHeartbeat)
+
+	authRoutes := v1Routes.Group("/auth")
+	authRoutes.POST("/register", server.registerUser)
+	authRoutes.POST("/login", server.loginUser)
 
 	server.router = router
 }

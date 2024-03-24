@@ -10,13 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type registerUserBody struct {
-	email    string `json:"email,omitempty"`
-	password string `json:"password,omitempty"`
-} // @name registerUserBody
+type authUserBody struct {
+	Email    string `json:"email,omitempty" binding:"required"`
+	Password string `json:"password,omitempty" binding:"required,min=6"`
+} // @name authUserBody
 
 type registerResponse struct {
-	SessionID             uuid.UUID `json:""sessionId`
+	SessionID             uuid.UUID `json:"sessionId"`
 	AccessToken           string    `json:"accessToken"`
 	AccessTokenExpiresAt  time.Time `json:"accessTokenExpiresAt"`
 	RefreshToken          string    `json:"refreshToken"`
@@ -25,9 +25,9 @@ type registerResponse struct {
 } // @name registerResponse
 
 func (server *Server) registerUser(ctx *gin.Context) {
-	var credentials registerUserBody
+	var credentials authUserBody
 	if err := ctx.ShouldBindJSON(credentials); err != nil {
-		ctx.JSON(http.StatusBadRequest, nil) // TODO: Create proper error response
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
 		return
 	}
 
@@ -37,32 +37,27 @@ func (server *Server) registerUser(ctx *gin.Context) {
 	defer cancel()
 
 	userToCreate := db.User{
-		Email:    credentials.email,
-		Password: credentials.email,
+		Email:    credentials.Email,
+		Password: credentials.Email,
 	}
 
-	userID, err := userColl.CreateUser(c, userToCreate)
+	_, err := userColl.CreateUser(c, userToCreate)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, nil) // TODO: Create proper error response
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err) // TODO: Create proper error response
 		return
 	}
 
-	userIDString := userID.Hex()
+	ctx.Status(http.StatusCreated)
+}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateToken(userIDString, 10*time.Minute)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, nil) // TODO: Create proper error response
+func (server *Server) loginUser(ctx *gin.Context) {
+	var credentials authUserBody
+	if err := ctx.ShouldBindJSON(credentials); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
 		return
 	}
 
-	res := registerResponse{
-		SessionID:            accessPayload.ID,
-		AccessToken:          accessToken,
-		AccessTokenExpiresAt: accessPayload.ExpiresAt,
-		// RefreshToken:
-		// RefreshTokenExpiresAt:
-		UserID: userIDString,
-	}
+	userColl := db.NewUserCollection(server.dbClient, server.dbName)
 
-	ctx.JSON(http.StatusOK, res)
+	// user, err := userColl.GetUserByEmail()
 }

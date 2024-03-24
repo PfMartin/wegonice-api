@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/PfMartin/wegonice-api/token"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -10,26 +12,44 @@ import (
 )
 
 type Server struct {
-	dbClient   *mongo.Client
-	dbName     string
-	url        string
-	basePath   string
-	router     *gin.Engine
+	config     ServerConfig
 	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
-func NewServer(dbClient *mongo.Client, dbName string, url string, basePath string, tokenSymmetricKey string) *Server {
+type ServerConfig struct {
+	dbClient             *mongo.Client
+	dbName               string
+	url                  string
+	basePath             string
+	tokenSymmetricKey    string
+	accessTokenDuration  time.Duration
+	refreshTokenDuration time.Duration
+}
+
+func NewServer(
+	dbClient *mongo.Client,
+	dbName string, url string,
+	basePath string,
+	tokenSymmetricKey string,
+	accessTokenDuration time.Duration,
+	refreshTokenDuration time.Duration,
+) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
 		log.Err(err).Msg("cannot create token maker")
 		return nil
 	}
 
+	config := ServerConfig{
+		dbClient: dbClient,
+		dbName:   dbName,
+		url:      url,
+		basePath: basePath,
+	}
+
 	server := &Server{
-		dbClient:   dbClient,
-		dbName:     dbName,
-		url:        url,
-		basePath:   basePath,
+		config:     config,
 		tokenMaker: tokenMaker,
 	}
 
@@ -41,7 +61,7 @@ func NewServer(dbClient *mongo.Client, dbName string, url string, basePath strin
 func (server *Server) setupRoutes() {
 	router := gin.Default()
 
-	v1Routes := router.Group(server.basePath)
+	v1Routes := router.Group(server.config.basePath)
 
 	v1Routes.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	v1Routes.GET("/heartbeat", server.getHeartbeat)
@@ -54,5 +74,5 @@ func (server *Server) setupRoutes() {
 }
 
 func (server *Server) Start() error {
-	return server.router.Run(server.url)
+	return server.router.Run(server.config.url)
 }

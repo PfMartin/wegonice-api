@@ -39,6 +39,7 @@ type User struct {
 	PasswordHash string `bson:"passwordHash" json:"passwordHash"`
 	Password     string `bson:"password" json:"password" binding:"required"`
 	Role         Role   `bson:"role" json:"role,omitempty"`
+	IsActive     bool   `bson:"isActive" json:"isActive,omitempty"`
 	CreatedAt    int64  `bson:"createdAt" json:"createdAt,omitempty"`
 	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt,omitempty"`
 }

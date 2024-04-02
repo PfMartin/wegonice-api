@@ -57,6 +57,7 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 		"email":        user.Email,
 		"passwordHash": hashedPassword,
 		"role":         user.Role,
+		"isActive":     user.IsActive,
 		"createdAt":    time.Now().Unix(),
 		"modifiedAt":   time.Now().Unix(),
 	}

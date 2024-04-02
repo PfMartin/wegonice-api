@@ -30,6 +30,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 	userToCreate := db.User{
 		Email:    credentials.Email,
 		Password: credentials.Email,
+		IsActive: false,
 	}
 
 	_, err := userColl.CreateUser(c, userToCreate)

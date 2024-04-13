@@ -57,7 +57,7 @@ func main() {
 
 	wegoniceStore := db.NewMongoDBStore(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 
-	server := api.NewServer(wegoniceStore, conf.DBName, conf.APIURL, conf.APIBasePath, conf.TokenSymmetricKey, conf.AccessTokenDuration.Abs(), conf.RefreshTokenDuration.Abs())
+	server := api.NewServer(wegoniceStore, conf.APIURL, conf.APIBasePath, conf.TokenSymmetricKey, conf.AccessTokenDuration.Abs(), conf.RefreshTokenDuration.Abs())
 	if err = server.Start(); err != nil {
 		log.Err(err).Msg("failed to start server")
 		return

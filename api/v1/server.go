@@ -19,14 +19,13 @@ type Server struct {
 }
 
 type ServerConfig struct {
-	dbName               string
 	url                  string
 	basePath             string
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 }
 
-func NewServer(store db.DBStore, dbName string, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
+func NewServer(store db.DBStore, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
 		log.Err(err).Msg("cannot create token maker")
@@ -34,7 +33,6 @@ func NewServer(store db.DBStore, dbName string, url string, basePath string, tok
 	}
 
 	config := ServerConfig{
-		dbName:               dbName,
 		url:                  url,
 		basePath:             basePath,
 		accessTokenDuration:  accessTokenDuration,

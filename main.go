@@ -55,15 +55,11 @@ func main() {
 	docs.SwaggerInfo.BasePath = conf.APIBasePath
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	dbClient, cancel := db.NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	_ = db.NewUserCollection(dbClient, conf.DBName)
-	_ = db.NewAuthorCollection(dbClient, conf.DBName)
+	wegoniceStore := db.NewMongoDBStore(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 
-	server := api.NewServer(dbClient, conf.DBName, conf.APIURL, conf.APIBasePath, conf.TokenSymmetricKey, conf.AccessTokenDuration.Abs(), conf.RefreshTokenDuration.Abs())
+	server := api.NewServer(wegoniceStore, conf.DBName, conf.APIURL, conf.APIBasePath, conf.TokenSymmetricKey, conf.AccessTokenDuration.Abs(), conf.RefreshTokenDuration.Abs())
 	if err = server.Start(); err != nil {
 		log.Err(err).Msg("failed to start server")
 		return
 	}
-
-	defer cancel()
 }

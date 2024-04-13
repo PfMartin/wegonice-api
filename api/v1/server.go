@@ -3,22 +3,22 @@ package api
 import (
 	"time"
 
+	"github.com/PfMartin/wegonice-api/db"
 	"github.com/PfMartin/wegonice-api/token"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Server struct {
 	config     ServerConfig
+	store      db.DBStore
 	tokenMaker token.Maker
 	router     *gin.Engine
 }
 
 type ServerConfig struct {
-	dbClient             *mongo.Client
 	dbName               string
 	url                  string
 	basePath             string
@@ -26,7 +26,7 @@ type ServerConfig struct {
 	refreshTokenDuration time.Duration
 }
 
-func NewServer(dbClient *mongo.Client, dbName string, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
+func NewServer(store db.DBStore, dbName string, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
 		log.Err(err).Msg("cannot create token maker")
@@ -34,7 +34,6 @@ func NewServer(dbClient *mongo.Client, dbName string, url string, basePath strin
 	}
 
 	config := ServerConfig{
-		dbClient:             dbClient,
 		dbName:               dbName,
 		url:                  url,
 		basePath:             basePath,
@@ -44,6 +43,7 @@ func NewServer(dbClient *mongo.Client, dbName string, url string, basePath strin
 
 	server := &Server{
 		config:     config,
+		store:      store,
 		tokenMaker: tokenMaker,
 	}
 

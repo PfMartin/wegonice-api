@@ -12,10 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type AuthorCollection struct {
-	collection *mongo.Collection
-}
-
 var authorLookupStage = bson.M{"$lookup": bson.M{
 	"from":         "authors",
 	"localField":   "authorId",
@@ -46,21 +42,13 @@ var authorProjectStage = bson.M{"$project": bson.M{
 	},
 }}
 
-func NewAuthorCollection(dbClient *mongo.Client, dbName string) *AuthorCollection {
-	collection := dbClient.Database(dbName).Collection("authors")
-
-	return &AuthorCollection{
-		collection,
-	}
-}
-
-func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Author) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateAuthor(ctx context.Context, author Author) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"name": 1},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := authorColl.collection.Indexes().CreateOne(ctx, indexModel)
+	_, err := store.authorCollection.Indexes().CreateOne(ctx, indexModel)
 	if err != nil {
 		log.Err(err).Msgf("author with name %s already exists", author.Name)
 		return primitive.NilObjectID, err
@@ -85,7 +73,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 		"modifiedAt":   time.Now().Unix(),
 	}
 
-	insertResult, err := authorColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := store.authorCollection.InsertOne(ctx, insertData)
 	if err != nil {
 		log.Err(err).Msgf("failed to insert author with name %s", author.Name)
 		return primitive.NilObjectID, err
@@ -96,7 +84,7 @@ func (authorColl *AuthorCollection) CreateAuthor(ctx context.Context, author Aut
 	return authorID, nil
 }
 
-func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error) {
+func (store *MongoDBStore) GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error) {
 	var authors []Author
 
 	pipeline := []bson.M{
@@ -107,7 +95,7 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 		pagination.getLimitStage(),
 	}
 
-	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
+	cursor, err := store.authorCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msg("failed to aggregate author documents")
 		return authors, err
@@ -122,7 +110,7 @@ func (authorColl *AuthorCollection) GetAllAuthors(ctx context.Context, paginatio
 	return authors, nil
 }
 
-func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID string) (Author, error) {
+func (store *MongoDBStore) GetAuthorByID(ctx context.Context, authorID string) (Author, error) {
 	var author Author
 
 	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
@@ -138,7 +126,7 @@ func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID 
 		{"$limit": 1},
 	}
 
-	cursor, err := authorColl.collection.Aggregate(ctx, pipeline)
+	cursor, err := store.authorCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msgf("failed to execute pipeline to find author with authorID %s and its user", authorID)
 		return author, err
@@ -158,7 +146,7 @@ func (authorColl *AuthorCollection) GetAuthorByID(ctx context.Context, authorID 
 	return author, nil
 }
 
-func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate Author) (int64, error) {
+func (store *MongoDBStore) UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate Author) (int64, error) {
 	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
@@ -194,7 +182,7 @@ func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, author
 		update["$set"].(bson.M)["imageName"] = authorUpdate.ImageName
 	}
 
-	updateResult, err := authorColl.collection.UpdateOne(ctx, filter, update)
+	updateResult, err := store.authorCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Err(err).Msgf("failed to update author with author authorID %s", authorID)
 		return 0, err
@@ -212,16 +200,14 @@ func (authorColl *AuthorCollection) UpdateAuthorByID(ctx context.Context, author
 	return modifiedCount, err
 }
 
-func (authorColl *AuthorCollection) DeleteAuthorByID(ctx context.Context, authorID string) (int64, error) {
+func (store *MongoDBStore) DeleteAuthorByID(ctx context.Context, authorID string) (int64, error) {
 	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
 		return 0, err
 	}
 
-	recipeColl := NewRecipeCollection(authorColl.collection.Database().Client(), authorColl.collection.Database().Name())
-
-	if err = checkReferencesOfDocument(ctx, recipeColl.collection, "authorId", primitiveAuthorID); err != nil {
+	if err = checkReferencesOfDocument(ctx, store.recipeCollection, "authorId", primitiveAuthorID); err != nil {
 		return 0, err
 	}
 
@@ -229,7 +215,7 @@ func (authorColl *AuthorCollection) DeleteAuthorByID(ctx context.Context, author
 		"_id": primitiveAuthorID,
 	}
 
-	deleteResult, err := authorColl.collection.DeleteOne(ctx, filter)
+	deleteResult, err := store.authorCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Err(err).Msgf("failed to delete author with authorID %s", authorID)
 		return 0, err

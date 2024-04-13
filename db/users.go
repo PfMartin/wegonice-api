@@ -12,10 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type UserCollection struct {
-	collection *mongo.Collection
-}
-
 var userLookupStage = bson.M{"$lookup": bson.M{
 	"from":         "users",
 	"localField":   "userId",
@@ -23,21 +19,13 @@ var userLookupStage = bson.M{"$lookup": bson.M{
 	"as":           "user",
 }}
 
-func NewUserCollection(dbClient *mongo.Client, dbName string) *UserCollection {
-	collection := dbClient.Database(dbName).Collection("users")
-
-	return &UserCollection{
-		collection,
-	}
-}
-
-func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateUser(ctx context.Context, user User) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"email": 1},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := userColl.collection.Indexes().CreateOne(ctx, indexModel)
+	_, err := store.userCollection.Indexes().CreateOne(ctx, indexModel)
 	if err != nil {
 		log.Err(err).Msgf("user with email %s already exists", user.Email)
 		return primitive.NilObjectID, err
@@ -62,7 +50,7 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 		"modifiedAt":   time.Now().Unix(),
 	}
 
-	insertResult, err := userColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := store.userCollection.InsertOne(ctx, insertData)
 	if err != nil {
 		log.Err(err).Msgf("failed to insert user with email %s", user.Email)
 		return primitive.NilObjectID, err
@@ -73,13 +61,13 @@ func (userColl *UserCollection) CreateUser(ctx context.Context, user User) (prim
 	return userID, nil
 }
 
-func (userColl *UserCollection) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
+func (store *MongoDBStore) GetAllUsers(ctx context.Context, pagination Pagination) ([]User, error) {
 	var users []User
 
 	findOptions := pagination.getFindOptions()
 	findOptions.SetSort(bson.M{"email": 1})
 
-	cursor, err := userColl.collection.Find(ctx, bson.M{}, findOptions)
+	cursor, err := store.userCollection.Find(ctx, bson.M{}, findOptions)
 	if err != nil {
 		log.Err(err).Msg("failed to find user documents")
 		return users, err
@@ -94,14 +82,14 @@ func (userColl *UserCollection) GetAllUsers(ctx context.Context, pagination Pagi
 	return users, nil
 }
 
-func (userColl *UserCollection) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (store *MongoDBStore) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	var user User
 
 	filter := bson.M{
 		"email": email,
 	}
 
-	if err := userColl.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+	if err := store.userCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		log.Err(err).Msgf("failed to find user with email %s", email)
 		return user, err
 	}
@@ -109,7 +97,7 @@ func (userColl *UserCollection) GetUserByEmail(ctx context.Context, email string
 	return user, nil
 }
 
-func (userColl *UserCollection) GetUserByID(ctx context.Context, userID string) (User, error) {
+func (store *MongoDBStore) GetUserByID(ctx context.Context, userID string) (User, error) {
 	var user User
 
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
@@ -122,7 +110,7 @@ func (userColl *UserCollection) GetUserByID(ctx context.Context, userID string) 
 		"_id": primitiveUserID,
 	}
 
-	if err = userColl.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+	if err = store.userCollection.FindOne(ctx, filter).Decode(&user); err != nil {
 		log.Err(err).Msgf("failed to find user with userID %s", userID)
 		return user, err
 	}
@@ -130,7 +118,7 @@ func (userColl *UserCollection) GetUserByID(ctx context.Context, userID string) 
 	return user, nil
 }
 
-func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
+func (store *MongoDBStore) UpdateUserByID(ctx context.Context, userID string, userUpdate User) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
@@ -157,7 +145,7 @@ func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID strin
 		update["$set"].(bson.M)["passwordHash"] = hashedPassword
 	}
 
-	updateResult, err := userColl.collection.UpdateOne(ctx, filter, update)
+	updateResult, err := store.userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Err(err).Msgf("failed to update user with user userID %s", userID)
 		return 0, err
@@ -175,22 +163,18 @@ func (userColl *UserCollection) UpdateUserByID(ctx context.Context, userID strin
 	return modifiedCount, err
 }
 
-func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
+func (store *MongoDBStore) DeleteUserByID(ctx context.Context, userID string) (int64, error) {
 	primitiveUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse userID %s to primitive ObjectID", userID)
 		return 0, err
 	}
 
-	recipeColl := NewRecipeCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
-
-	if err = checkReferencesOfDocument(ctx, recipeColl.collection, "userId", primitiveUserID); err != nil {
+	if err = checkReferencesOfDocument(ctx, store.recipeCollection, "userId", primitiveUserID); err != nil {
 		return 0, err
 	}
 
-	authorColl := NewAuthorCollection(userColl.collection.Database().Client(), userColl.collection.Database().Name())
-
-	if err = checkReferencesOfDocument(ctx, authorColl.collection, "userId", primitiveUserID); err != nil {
+	if err = checkReferencesOfDocument(ctx, store.authorCollection, "userId", primitiveUserID); err != nil {
 		return 0, err
 	}
 
@@ -198,7 +182,7 @@ func (userColl *UserCollection) DeleteUserByID(ctx context.Context, userID strin
 		"_id": primitiveUserID,
 	}
 
-	deleteResult, err := userColl.collection.DeleteOne(ctx, filter)
+	deleteResult, err := store.userCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Err(err).Msgf("failed to delete user with userID %s", userID)
 		return 0, err

@@ -9,20 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getSessionCollection(t *testing.T) *SessionCollection {
-	t.Helper()
-
-	conf := getDatabaseConfiguration(t)
-
-	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	require.NotNil(t, dbClient)
-
-	coll := NewSessionCollection(dbClient, conf.DBName)
-
-	return coll
-}
-
-func createRandomSession(t *testing.T, sessionColl *SessionCollection, userID string) Session {
+func createRandomSession(t *testing.T, store *MongoDBStore, userID string) Session {
 	t.Helper()
 
 	session := Session{
@@ -33,7 +20,7 @@ func createRandomSession(t *testing.T, sessionColl *SessionCollection, userID st
 		ExpiresAt:    time.Now().Add(24 * time.Hour).Unix(),
 	}
 
-	insertedSessionID, err := sessionColl.CreateSession(context.Background(), session)
+	insertedSessionID, err := store.CreateSession(context.Background(), session)
 	require.NoError(t, err)
 	require.False(t, insertedSessionID.IsZero())
 
@@ -50,24 +37,25 @@ func createRandomSession(t *testing.T, sessionColl *SessionCollection, userID st
 }
 
 func TestUnitCreateSession(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	sessionColl := getSessionCollection(t)
+	store := getMongoDBStore(t)
+	user := createRandomUser(t, store)
 
 	t.Run("Creates a new session and throws an error when the same session should be created again", func(t *testing.T) {
-		_ = createRandomSession(t, sessionColl, user.ID)
+		_ = createRandomSession(t, store, user.ID)
 	})
 }
 
 func TestUnitGetSessionByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	sessionColl := getSessionCollection(t)
-	createdSession := createRandomSession(t, sessionColl, user.ID)
+	store := getMongoDBStore(t)
+
+	user := createRandomUser(t, store)
+	createdSession := createRandomSession(t, store, user.ID)
 
 	t.Run("Gets created session without any errors", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		gotSession, err := sessionColl.GetSessionByID(ctx, createdSession.ID)
+		gotSession, err := store.GetSessionByID(ctx, createdSession.ID)
 		require.NoError(t, err)
 
 		expectedSession := createdSession

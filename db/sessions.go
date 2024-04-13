@@ -7,12 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
-
-type SessionCollection struct {
-	collection *mongo.Collection
-}
 
 var sessionProjectStage = bson.M{"$project": bson.M{
 	"_id":          1,
@@ -33,15 +28,7 @@ var sessionProjectStage = bson.M{"$project": bson.M{
 	},
 }}
 
-func NewSessionCollection(dbClient *mongo.Client, dbName string) *SessionCollection {
-	collection := dbClient.Database(dbName).Collection("sessions")
-
-	return &SessionCollection{
-		collection,
-	}
-}
-
-func (sessionColl *SessionCollection) CreateSession(ctx context.Context, session Session) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateSession(ctx context.Context, session Session) (primitive.ObjectID, error) {
 	insertData := bson.M{
 		"userId":       session.UserID,
 		"refreshToken": session.RefreshToken,
@@ -51,7 +38,7 @@ func (sessionColl *SessionCollection) CreateSession(ctx context.Context, session
 		"expiresAt":    session.ExpiresAt,
 	}
 
-	insertResult, err := sessionColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := store.sessionCollection.InsertOne(ctx, insertData)
 	if err != nil {
 		log.Err(err).Msg("failed to insert session")
 		return primitive.NilObjectID, err
@@ -62,7 +49,7 @@ func (sessionColl *SessionCollection) CreateSession(ctx context.Context, session
 	return sessionID, nil
 }
 
-func (sessionColl *SessionCollection) GetSessionByID(ctx context.Context, sessionID string) (Session, error) {
+func (store *MongoDBStore) GetSessionByID(ctx context.Context, sessionID string) (Session, error) {
 	var session Session
 
 	primitiveSessionID, err := primitive.ObjectIDFromHex(sessionID)
@@ -78,7 +65,7 @@ func (sessionColl *SessionCollection) GetSessionByID(ctx context.Context, sessio
 		{"$limit": 1},
 	}
 
-	cursor, err := sessionColl.collection.Aggregate(ctx, pipeline)
+	cursor, err := store.sessionCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msgf("failed to execute pipeline to find session with sessionID %s and its user", sessionID)
 		return session, err

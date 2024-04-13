@@ -14,19 +14,6 @@ import (
 var categories = []Category{Breakfast, Main, Desert, Smoothie, Baby, Drink}
 var amountUnits = []AmountUnit{Milliliters, Liters, Milligrams, Grams, Tablespoon, Teaspoon, Piece}
 
-func getRecipeCollection(t *testing.T) *RecipeCollection {
-	t.Helper()
-
-	conf := getDatabaseConfiguration(t)
-
-	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	require.NotNil(t, dbClient)
-
-	coll := NewRecipeCollection(dbClient, conf.DBName)
-
-	return coll
-}
-
 func getRandomIngredients(t *testing.T, ingredientsCount int, ingredients *[]Ingredient) {
 	t.Helper()
 
@@ -79,7 +66,7 @@ func getRandomIngredientsAndPrepSteps(t *testing.T, ingredientCount, prepStepCou
 	return ingredients, prepSteps
 }
 
-func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID string, authorID string) Recipe {
+func createRandomRecipe(t *testing.T, store *MongoDBStore, userID string, authorID string) Recipe {
 	t.Helper()
 
 	ingredients, prepSteps := getRandomIngredientsAndPrepSteps(t, 10, 10)
@@ -99,7 +86,7 @@ func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID strin
 		UserID:      userID,
 	}
 
-	insertedRecipeID, err := recipeColl.CreateRecipe(context.Background(), recipe)
+	insertedRecipeID, err := store.CreateRecipe(context.Background(), recipe)
 	require.NoError(t, err)
 	require.False(t, insertedRecipeID.IsZero())
 
@@ -122,27 +109,27 @@ func createRandomRecipe(t *testing.T, recipeColl *RecipeCollection, userID strin
 }
 
 func TestUnitCreateRecipe(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+	store := getMongoDBStore(t)
 
-	recipeColl := getRecipeCollection(t)
+	user := createRandomUser(t, store)
+	author := createRandomAuthor(t, store, user.ID)
 
 	t.Run("Creates new recipe and throws an error when the same recipe should be created again", func(t *testing.T) {
-		recipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+		recipe := createRandomRecipe(t, store, user.ID, author.ID)
 
-		_, err := recipeColl.CreateRecipe(context.Background(), recipe)
+		_, err := store.CreateRecipe(context.Background(), recipe)
 		require.Error(t, err)
 	})
 }
 
 func TestUnitGetAllRecipes(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+	store := getMongoDBStore(t)
 
-	recipeColl := getRecipeCollection(t)
+	user := createRandomUser(t, store)
+	author := createRandomAuthor(t, store, user.ID)
 
 	for i := 0; i < 10; i++ {
-		r := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+		r := createRandomRecipe(t, store, user.ID, author.ID)
 		fmt.Println(r.AuthorID)
 	}
 
@@ -153,7 +140,7 @@ func TestUnitGetAllRecipes(t *testing.T) {
 
 	t.Run("Gets all recipes with pagination", func(t *testing.T) {
 		ctx := context.Background()
-		recipes, err := recipeColl.GetAllRecipes(ctx, pagination)
+		recipes, err := store.GetAllRecipes(ctx, pagination)
 
 		for _, recipe := range recipes {
 			fmt.Print(recipe.Name + " | ")
@@ -186,11 +173,12 @@ func TestUnitGetAllRecipes(t *testing.T) {
 }
 
 func TestUnitGetRecipeByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
-	recipeColl := getRecipeCollection(t)
+	store := getMongoDBStore(t)
 
-	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+	user := createRandomUser(t, store)
+	author := createRandomAuthor(t, store, user.ID)
+
+	createdRecipe := createRandomRecipe(t, store, user.ID, author.ID)
 
 	testCases := []struct {
 		name           string
@@ -218,7 +206,7 @@ func TestUnitGetRecipeByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotRecipe, err := recipeColl.GetRecipeByID(context.Background(), tc.recipeID)
+			gotRecipe, err := store.GetRecipeByID(context.Background(), tc.recipeID)
 
 			if tc.hasError {
 				require.Error(t, err)
@@ -252,11 +240,12 @@ func TestUnitGetRecipeByID(t *testing.T) {
 }
 
 func TestUnitUpdateRecipeByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
+	store := getMongoDBStore(t)
 
-	recipeColl := getRecipeCollection(t)
-	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+	user := createRandomUser(t, store)
+	author := createRandomAuthor(t, store, user.ID)
+
+	createdRecipe := createRandomRecipe(t, store, user.ID, author.ID)
 
 	ingredients, prepSteps := getRandomIngredientsAndPrepSteps(t, 5, 5)
 
@@ -300,7 +289,7 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			modifiedCount, err := recipeColl.UpdateRecipeByID(context.Background(), tc.recipeID, tc.recipeUpdate)
+			modifiedCount, err := store.UpdateRecipeByID(context.Background(), tc.recipeID, tc.recipeUpdate)
 			require.Equal(t, tc.modifiedCount, modifiedCount)
 
 			if tc.hasError {
@@ -314,7 +303,7 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 				return
 			}
 
-			updatedRecipe, err := recipeColl.GetRecipeByID(context.Background(), tc.recipeID)
+			updatedRecipe, err := store.GetRecipeByID(context.Background(), tc.recipeID)
 			require.NoError(t, err)
 
 			expectedRecipe := Recipe{
@@ -345,11 +334,12 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 }
 
 func TestDeleteRecipeByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	author := createRandomAuthor(t, getAuthorCollection(t), user.ID)
-	recipeColl := getRecipeCollection(t)
+	store := getMongoDBStore(t)
 
-	createdRecipe := createRandomRecipe(t, recipeColl, user.ID, author.ID)
+	user := createRandomUser(t, store)
+	author := createRandomAuthor(t, store, user.ID)
+
+	createdRecipe := createRandomRecipe(t, store, user.ID, author.ID)
 
 	testCases := []struct {
 		name        string
@@ -379,7 +369,7 @@ func TestDeleteRecipeByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			deleteCount, err := recipeColl.DeleteRecipeByID(context.Background(), tc.recipeID)
+			deleteCount, err := store.DeleteRecipeByID(context.Background(), tc.recipeID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 
 			if tc.hasError {

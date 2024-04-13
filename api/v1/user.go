@@ -22,8 +22,6 @@ func (server *Server) registerUser(ctx *gin.Context) {
 		return
 	}
 
-	userColl := db.NewUserCollection(server.config.dbClient, server.config.dbName)
-
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -33,7 +31,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 		IsActive: false,
 	}
 
-	_, err := userColl.CreateUser(c, userToCreate)
+	_, err := server.store.CreateUser(c, userToCreate)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err) // TODO: Create proper error response
 		return
@@ -58,11 +56,9 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	userColl := db.NewUserCollection(server.config.dbClient, server.config.dbName)
-
 	c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	user, err := userColl.GetUserByEmail(c, credentials.Email)
+	user, err := server.store.GetUserByEmail(c, credentials.Email)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusNotFound, err) // TODO: Create proper error response
 		return
@@ -86,9 +82,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	sessionColl := db.NewSessionCollection(server.config.dbClient, server.config.dbName)
-
-	sessionID, err := sessionColl.CreateSession(c, db.Session{
+	sessionID, err := server.store.CreateSession(c, db.Session{
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
 		UserAgent:    ctx.Request.UserAgent(),

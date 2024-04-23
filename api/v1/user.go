@@ -11,13 +11,13 @@ import (
 )
 
 type authUserBody struct {
-	Email    string `json:"email,omitempty" binding:"required"`
+	Email    string `json:"email,omitempty" binding:"required"` //TODO: Email validation
 	Password string `json:"password,omitempty" binding:"required,min=6"`
 } // @name authUserBody
 
 func (server *Server) registerUser(ctx *gin.Context) {
 	var credentials authUserBody
-	if err := ctx.ShouldBindJSON(credentials); err != nil {
+	if err := ctx.ShouldBindJSON(&credentials); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
 		return
 	}
@@ -51,7 +51,7 @@ type loginResponse struct {
 
 func (server *Server) loginUser(ctx *gin.Context) {
 	var credentials authUserBody
-	if err := ctx.ShouldBindJSON(credentials); err != nil {
+	if err := ctx.ShouldBindJSON(&credentials); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
 		return
 	}

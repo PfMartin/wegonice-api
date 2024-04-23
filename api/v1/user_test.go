@@ -47,10 +47,35 @@ func TestUnitRegisterUser(t *testing.T) {
 				"password": password,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1)
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(gomock.Any(), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to missing email",
+			body: gin.H{
+				"password": password,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to password too short",
+			body: gin.H{
+				"email":    user.Email,
+				"password": "short",
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 	}

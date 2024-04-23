@@ -21,3 +21,6 @@ get-swag:
 
 docs:
 	swag init -o ./api/v1/docs
+
+mock-db:
+	mockgen -destination db/mock/store.go github.com/PfMartin/wegonice-api/db DBStore

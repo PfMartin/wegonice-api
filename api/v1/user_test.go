@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func randomUser(t *testing.T) (db.User, string) {
@@ -33,6 +34,7 @@ func randomUser(t *testing.T) (db.User, string) {
 
 func TestUnitRegisterUser(t *testing.T) {
 	user, password := randomUser(t)
+	userID := primitive.NewObjectID()
 
 	testCases := []struct {
 		name          string
@@ -47,7 +49,7 @@ func TestUnitRegisterUser(t *testing.T) {
 				"password": password,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(gomock.Any(), nil)
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(userID, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)

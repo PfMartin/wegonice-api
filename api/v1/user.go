@@ -85,10 +85,10 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	sessionID, err := server.store.CreateSession(c, db.Session{
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    ctx.Request.UserAgent(),
-		ClientIP:     ctx.ClientIP(),
-		IsBlocked:    false,
-		ExpiresAt:    refreshPayload.ExpiresAt,
+		// UserAgent:    ctx.Request.UserAgent(),
+		// ClientIP:     ctx.ClientIP(),
+		IsBlocked: false,
+		ExpiresAt: refreshPayload.ExpiresAt,
 	})
 
 	if err != nil {

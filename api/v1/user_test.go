@@ -49,7 +49,13 @@ func TestUnitRegisterUser(t *testing.T) {
 				"password": password,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(userID, nil)
+				userToCreate := db.User{
+					Email:    user.Email,
+					Password: password,
+					IsActive: false,
+				}
+
+				store.EXPECT().CreateUser(gomock.Any(), userToCreate).Times(1).Return(userID, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusCreated, recorder.Code)
@@ -104,4 +110,8 @@ func TestUnitRegisterUser(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
+}
+
+func TestUnitLoginUser(t *testing.T) {
+
 }

@@ -27,7 +27,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 
 	userToCreate := db.User{
 		Email:    credentials.Email,
-		Password: credentials.Email,
+		Password: credentials.Password,
 		IsActive: false,
 	}
 

@@ -14,6 +14,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"fmt"
 )
 
 func randomUser(t *testing.T) (db.User, string) {
@@ -64,6 +66,19 @@ func TestUnitRegisterUser(t *testing.T) {
 			},
 		},
 		{
+			name: "Fails due to user with email already exists",
+			body: gin.H{
+				"email":    user.Email,
+				"password": password,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(primitive.NewObjectID(), fmt.Errorf("Duplicate user error"))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotAcceptable, recorder.Code)
+			},
+		},
+		{
 			name: "Fails due to missing email",
 			body: gin.H{
 				"password": password,
@@ -80,6 +95,18 @@ func TestUnitRegisterUser(t *testing.T) {
 			body: gin.H{
 				"email":    user.Email,
 				"password": "short",
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to missing password",
+			body: gin.H{
+				"email": user.Email,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
@@ -135,12 +162,50 @@ func TestUnitLoginUser(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).Times(1).Return(user, nil)
-
-				// TODO: Add correct arguments for create session
 				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(1).Return(sessionID, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusAccepted, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to missing email address",
+			body: gin.H{
+				"password": password,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), gomock.Any()).Times(0)
+				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to missing password",
+			body: gin.H{
+				"email": user.Email,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), gomock.Any()).Times(0)
+				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fails due to wrong password",
+			body: gin.H{
+				"email":    user.Email,
+				"password": "wrongPassword",
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).Times(1).Return(user, nil)
+				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 	}

@@ -33,7 +33,7 @@ func (server *Server) registerUser(ctx *gin.Context) {
 
 	_, err := server.store.CreateUser(c, userToCreate)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err) // TODO: Create proper error response
+		ctx.AbortWithStatusJSON(http.StatusNotAcceptable, err) // TODO: Create proper error response
 		return
 	}
 
@@ -85,10 +85,10 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	sessionID, err := server.store.CreateSession(c, db.Session{
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		// UserAgent:    ctx.Request.UserAgent(),
-		// ClientIP:     ctx.ClientIP(),
-		IsBlocked: false,
-		ExpiresAt: refreshPayload.ExpiresAt,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIP:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiresAt,
 	})
 
 	if err != nil {

@@ -9,20 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getAuthorCollection(t *testing.T) *AuthorCollection {
+func getMongoDBStore(t *testing.T) *MongoDBStore {
 	t.Helper()
 
 	conf := getDatabaseConfiguration(t)
 
 	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
+	store := NewMongoDBStore(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
 	require.NotNil(t, dbClient)
 
-	coll := NewAuthorCollection(dbClient, conf.DBName)
-
-	return coll
+	return store
 }
 
-func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID string) Author {
+func createRandomAuthor(t *testing.T, store *MongoDBStore, userID string) Author {
 	t.Helper()
 
 	author := Author{
@@ -36,7 +35,7 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 		UserID:       userID,
 	}
 
-	insertedAuthorID, err := authorColl.CreateAuthor(context.Background(), author)
+	insertedAuthorID, err := store.CreateAuthor(context.Background(), author)
 	require.NoError(t, err)
 	require.False(t, insertedAuthorID.IsZero())
 
@@ -58,23 +57,23 @@ func createRandomAuthor(t *testing.T, authorColl *AuthorCollection, userID strin
 }
 
 func TestUnitCreateAuthor(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	authorColl := getAuthorCollection(t)
+	store := getMongoDBStore(t)
+	user := createRandomUser(t, store)
 
 	t.Run("Creates a new author and throws an error when the same author should be created again", func(t *testing.T) {
-		author := createRandomAuthor(t, authorColl, user.ID)
+		author := createRandomAuthor(t, store, user.ID)
 
-		_, err := authorColl.CreateAuthor(context.Background(), author)
+		_, err := store.CreateAuthor(context.Background(), author)
 		require.Error(t, err)
 	})
 }
 
 func TestUnitGetAllAuthors(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	authorColl := getAuthorCollection(t)
+	store := getMongoDBStore(t)
+	user := createRandomUser(t, store)
 
 	for i := 0; i < 10; i++ {
-		_ = createRandomAuthor(t, authorColl, user.ID)
+		_ = createRandomAuthor(t, store, user.ID)
 	}
 
 	pagination := Pagination{
@@ -84,7 +83,7 @@ func TestUnitGetAllAuthors(t *testing.T) {
 
 	t.Run("Gets all authors with pagination", func(t *testing.T) {
 		ctx := context.Background()
-		authors, err := authorColl.GetAllAuthors(ctx, pagination)
+		authors, err := store.GetAllAuthors(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, authors)
 
@@ -99,9 +98,10 @@ func TestUnitGetAllAuthors(t *testing.T) {
 }
 
 func TestUnitGetAuthorByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	authorColl := getAuthorCollection(t)
-	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+	store := getMongoDBStore(t)
+	user := createRandomUser(t, store)
+
+	createdAuthor := createRandomAuthor(t, store, user.ID)
 
 	testCases := []struct {
 		name           string
@@ -129,7 +129,7 @@ func TestUnitGetAuthorByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotAuthor, err := authorColl.GetAuthorByID(context.Background(), tc.authorID)
+			gotAuthor, err := store.GetAuthorByID(context.Background(), tc.authorID)
 
 			if tc.hasError {
 				require.Error(t, err)
@@ -150,9 +150,10 @@ func TestUnitGetAuthorByID(t *testing.T) {
 }
 
 func TestUnitUpdateAuthorByID(t *testing.T) {
-	user := createRandomUser(t, getUserCollection(t))
-	authorColl := getAuthorCollection(t)
-	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
+	store := getMongoDBStore(t)
+	user := createRandomUser(t, store)
+
+	createdAuthor := createRandomAuthor(t, store, user.ID)
 
 	authorUpdate := Author{
 		Name:         util.RandomString(4),
@@ -194,7 +195,7 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			modifiedCount, err := authorColl.UpdateAuthorByID(context.Background(), tc.authorID, tc.authorUpdate)
+			modifiedCount, err := store.UpdateAuthorByID(context.Background(), tc.authorID, tc.authorUpdate)
 			require.Equal(t, tc.modifiedCount, modifiedCount)
 
 			if tc.hasError {
@@ -208,7 +209,7 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 				return
 			}
 
-			updatedAuthor, err := authorColl.GetAuthorByID(context.Background(), tc.authorID)
+			updatedAuthor, err := store.GetAuthorByID(context.Background(), tc.authorID)
 			require.NoError(t, err)
 
 			expectedAuthor := Author{
@@ -239,12 +240,12 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 }
 
 func TestUnitDeleteAuthorByID(t *testing.T) {
-	userColl := getUserCollection(t)
-	user := createRandomUser(t, userColl)
-	authorColl := getAuthorCollection(t)
-	createdAuthor := createRandomAuthor(t, authorColl, user.ID)
-	recipeUser := createRandomUser(t, userColl)
-	recipeAuthor := createRandomAuthor(t, authorColl, recipeUser.ID)
+	store := getMongoDBStore(t)
+
+	user := createRandomUser(t, store)
+	createdAuthor := createRandomAuthor(t, store, user.ID)
+	recipeUser := createRandomUser(t, store)
+	recipeAuthor := createRandomAuthor(t, store, recipeUser.ID)
 
 	testCases := []struct {
 		name                 string
@@ -283,10 +284,10 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.hasReferencingRecipe {
-				createRandomRecipe(t, getRecipeCollection(t), recipeUser.ID, recipeAuthor.ID)
+				createRandomRecipe(t, store, recipeUser.ID, recipeAuthor.ID)
 			}
 
-			deleteCount, err := authorColl.DeleteAuthorByID(context.Background(), tc.authorID)
+			deleteCount, err := store.DeleteAuthorByID(context.Background(), tc.authorID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 
 			if tc.hasError {

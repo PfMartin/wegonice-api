@@ -9,32 +9,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getUserCollection(t *testing.T) *UserCollection {
-	t.Helper()
-
-	conf := getDatabaseConfiguration(t)
-
-	dbClient, _ := NewDatabaseClient(conf.DBName, conf.DBUser, conf.DBPassword, conf.DBURI)
-	require.NotNil(t, dbClient)
-
-	coll := NewUserCollection(dbClient, conf.DBName)
-
-	return coll
-}
-
-func createRandomUser(t *testing.T, coll *UserCollection) User {
+func createRandomUser(t *testing.T, store *MongoDBStore) User {
 	t.Helper()
 
 	user := User{
 		Email:      util.RandomEmail(),
 		Password:   util.RandomString(6),
 		Role:       UserRole,
+		IsActive:   false,
 		CreatedAt:  time.Now().Unix(),
 		ModifiedAt: time.Now().Unix(),
 	}
 
 	ctx := context.Background()
-	insertedID, err := coll.CreateUser(ctx, user)
+	insertedID, err := store.CreateUser(ctx, user)
 
 	require.NoError(t, err)
 	require.False(t, insertedID.IsZero())
@@ -49,6 +37,7 @@ func createRandomUser(t *testing.T, coll *UserCollection) User {
 		Email:        user.Email,
 		PasswordHash: hashedPassword,
 		Password:     user.Password,
+		IsActive:     user.IsActive,
 		Role:         user.Role,
 		CreatedAt:    user.CreatedAt,
 		ModifiedAt:   user.ModifiedAt,
@@ -56,21 +45,21 @@ func createRandomUser(t *testing.T, coll *UserCollection) User {
 }
 
 func TestUnitCreateUser(t *testing.T) {
-	coll := getUserCollection(t)
+	store := getMongoDBStore(t)
 
 	t.Run("Creates a new user and throws an error when the same user should be created again", func(t *testing.T) {
-		user := createRandomUser(t, coll)
+		user := createRandomUser(t, store)
 
-		_, err := coll.CreateUser(context.Background(), user)
+		_, err := store.CreateUser(context.Background(), user)
 		require.Error(t, err) // Duplicate user error
 	})
 }
 
 func TestUnitGetAllUsers(t *testing.T) {
-	coll := getUserCollection(t)
+	store := getMongoDBStore(t)
 
 	for i := 0; i < 10; i++ {
-		_ = createRandomUser(t, coll)
+		_ = createRandomUser(t, store)
 	}
 
 	pagination := Pagination{
@@ -80,7 +69,7 @@ func TestUnitGetAllUsers(t *testing.T) {
 
 	t.Run("Gets all users with pagination", func(t *testing.T) {
 		ctx := context.Background()
-		users, err := coll.GetAllUsers(ctx, pagination)
+		users, err := store.GetAllUsers(ctx, pagination)
 		require.NoError(t, err)
 		require.NotEmpty(t, users)
 
@@ -89,9 +78,9 @@ func TestUnitGetAllUsers(t *testing.T) {
 }
 
 func TestUnitGetUserByID(t *testing.T) {
-	coll := getUserCollection(t)
+	store := getMongoDBStore(t)
 
-	createdUser := createRandomUser(t, coll)
+	createdUser := createRandomUser(t, store)
 
 	testCases := []struct {
 		name         string
@@ -119,7 +108,7 @@ func TestUnitGetUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotUser, err := coll.GetUserByID(context.Background(), tc.userID)
+			gotUser, err := store.GetUserByID(context.Background(), tc.userID)
 
 			if tc.hasError {
 				require.Error(t, err)
@@ -130,6 +119,51 @@ func TestUnitGetUserByID(t *testing.T) {
 			require.Equal(t, tc.expectedUser.Email, gotUser.Email)
 			require.NoError(t, util.CheckPassword(tc.expectedUser.Password, gotUser.PasswordHash))
 			require.Equal(t, tc.expectedUser.Role, gotUser.Role)
+			require.Equal(t, tc.expectedUser.IsActive, gotUser.IsActive)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.CreatedAt, 0), time.Unix(gotUser.CreatedAt, 0), 5*time.Second)
+			require.WithinDuration(t, time.Unix(tc.expectedUser.ModifiedAt, 0), time.Unix(gotUser.ModifiedAt, 0), 5*time.Second)
+		})
+	}
+}
+
+func TestUnitGetUserByEmail(t *testing.T) {
+	store := getMongoDBStore(t)
+
+	createdUser := createRandomUser(t, store)
+
+	testCases := []struct {
+		name         string
+		email        string
+		hasError     bool
+		expectedUser User
+	}{
+		{
+			name:         "Success",
+			email:        createdUser.Email,
+			hasError:     false,
+			expectedUser: createdUser,
+		},
+		{
+			name:     "Fail with email not found",
+			email:    "test@email.com",
+			hasError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotUser, err := store.GetUserByEmail(context.Background(), tc.email)
+
+			if tc.hasError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedUser.Email, gotUser.Email)
+			require.NoError(t, util.CheckPassword(tc.expectedUser.Password, gotUser.PasswordHash))
+			require.Equal(t, tc.expectedUser.Role, gotUser.Role)
+			require.Equal(t, tc.expectedUser.IsActive, gotUser.IsActive)
 			require.WithinDuration(t, time.Unix(tc.expectedUser.CreatedAt, 0), time.Unix(gotUser.CreatedAt, 0), 5*time.Second)
 			require.WithinDuration(t, time.Unix(tc.expectedUser.ModifiedAt, 0), time.Unix(gotUser.ModifiedAt, 0), 5*time.Second)
 		})
@@ -137,9 +171,9 @@ func TestUnitGetUserByID(t *testing.T) {
 }
 
 func TestUnitUpdateUserByID(t *testing.T) {
-	coll := getUserCollection(t)
+	store := getMongoDBStore(t)
 
-	createdUser := createRandomUser(t, coll)
+	createdUser := createRandomUser(t, store)
 
 	userUpdate := User{
 		Email:    util.RandomEmail(),
@@ -176,7 +210,7 @@ func TestUnitUpdateUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			modifiedCount, err := coll.UpdateUserByID(context.Background(), tc.userID, tc.userUpdate)
+			modifiedCount, err := store.UpdateUserByID(context.Background(), tc.userID, tc.userUpdate)
 			require.Equal(t, tc.modifiedCount, modifiedCount)
 
 			if tc.hasError {
@@ -190,7 +224,7 @@ func TestUnitUpdateUserByID(t *testing.T) {
 				return
 			}
 
-			updatedUser, err := coll.GetUserByID(context.Background(), tc.userID)
+			updatedUser, err := store.GetUserByID(context.Background(), tc.userID)
 			require.NoError(t, err)
 
 			expectedUser := User{
@@ -206,6 +240,7 @@ func TestUnitUpdateUserByID(t *testing.T) {
 			require.Equal(t, expectedUser.Email, updatedUser.Email)
 			require.NoError(t, util.CheckPassword(expectedUser.Password, updatedUser.PasswordHash))
 			require.Equal(t, expectedUser.Role, updatedUser.Role)
+			require.Equal(t, expectedUser.IsActive, updatedUser.IsActive)
 			require.WithinDuration(t, time.Unix(expectedUser.CreatedAt, 0), time.Unix(updatedUser.CreatedAt, 0), 5*time.Second)
 			require.WithinDuration(t, time.Unix(expectedUser.ModifiedAt, 0), time.Unix(updatedUser.ModifiedAt, 0), 5*time.Second)
 		})
@@ -213,13 +248,13 @@ func TestUnitUpdateUserByID(t *testing.T) {
 }
 
 func TestUnitDeleteUserByID(t *testing.T) {
-	userColl := getUserCollection(t)
+	store := getMongoDBStore(t)
 
-	createdUser := createRandomUser(t, userColl)
-	authorUser := createRandomUser(t, userColl)
-	recipeUser := createRandomUser(t, userColl)
+	createdUser := createRandomUser(t, store)
+	authorUser := createRandomUser(t, store)
+	recipeUser := createRandomUser(t, store)
 
-	recipeAuthor := createRandomAuthor(t, getAuthorCollection(t), recipeUser.ID)
+	recipeAuthor := createRandomAuthor(t, store, recipeUser.ID)
 
 	testCases := []struct {
 		name                 string
@@ -266,14 +301,14 @@ func TestUnitDeleteUserByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.hasReferencingAuthor {
-				createRandomAuthor(t, getAuthorCollection(t), authorUser.ID)
+				createRandomAuthor(t, store, authorUser.ID)
 			}
 
 			if tc.hasReferencingRecipe {
-				createRandomRecipe(t, getRecipeCollection(t), recipeUser.ID, recipeAuthor.ID)
+				createRandomRecipe(t, store, recipeUser.ID, recipeAuthor.ID)
 			}
 
-			deleteCount, err := userColl.DeleteUserByID(context.Background(), tc.userID)
+			deleteCount, err := store.DeleteUserByID(context.Background(), tc.userID)
 			require.Equal(t, tc.deleteCount, deleteCount)
 
 			if tc.hasError {

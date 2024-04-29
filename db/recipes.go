@@ -12,10 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type RecipeCollection struct {
-	collection *mongo.Collection
-}
-
 var recipeProjectStage = bson.M{"$project": bson.M{
 	"_id":         1,
 	"name":        1,
@@ -57,21 +53,13 @@ var recipeProjectStage = bson.M{"$project": bson.M{
 },
 }
 
-func NewRecipeCollection(dbClient *mongo.Client, dbName string) *RecipeCollection {
-	collection := dbClient.Database(dbName).Collection("recipes")
-
-	return &RecipeCollection{
-		collection,
-	}
-}
-
-func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Recipe) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateRecipe(ctx context.Context, recipe Recipe) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"name": 1},
 		Options: options.Index().SetUnique(true),
 	}
 
-	_, err := recipeColl.collection.Indexes().CreateOne(ctx, indexModel)
+	_, err := store.recipeCollection.Indexes().CreateOne(ctx, indexModel)
 	if err != nil {
 		log.Err(err).Msgf("recipe with name %s already exists", recipe.Name)
 		return primitive.NilObjectID, err
@@ -103,7 +91,7 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 		"modifiedAt":  time.Now().Unix(),
 	}
 
-	insertResult, err := recipeColl.collection.InsertOne(ctx, insertData)
+	insertResult, err := store.recipeCollection.InsertOne(ctx, insertData)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
@@ -113,7 +101,7 @@ func (recipeColl *RecipeCollection) CreateRecipe(ctx context.Context, recipe Rec
 	return recipeID, nil
 }
 
-func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, pagination Pagination) ([]Recipe, error) {
+func (store *MongoDBStore) GetAllRecipes(ctx context.Context, pagination Pagination) ([]Recipe, error) {
 	var recipes []Recipe
 
 	pipeline := []bson.M{
@@ -125,7 +113,7 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 		pagination.getLimitStage(),
 	}
 
-	cursor, err := recipeColl.collection.Aggregate(ctx, pipeline)
+	cursor, err := store.recipeCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msg("failed to aggregate recipe documents")
 		return recipes, err
@@ -140,7 +128,7 @@ func (recipeColl *RecipeCollection) GetAllRecipes(ctx context.Context, paginatio
 	return recipes, nil
 }
 
-func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error) {
+func (store *MongoDBStore) GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error) {
 	var recipe Recipe
 
 	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
@@ -157,7 +145,7 @@ func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID 
 		{"$limit": 1},
 	}
 
-	cursor, err := recipeColl.collection.Aggregate(ctx, pipeline)
+	cursor, err := store.recipeCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Err(err).Msgf("failed to execute pipeline to find recipe with recipeID %s and its user and its author", recipeID)
 		return recipe, err
@@ -177,7 +165,7 @@ func (recipeColl *RecipeCollection) GetRecipeByID(ctx context.Context, recipeID 
 	return recipe, nil
 }
 
-func (recipeColl *RecipeCollection) UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate Recipe) (int64, error) {
+func (store *MongoDBStore) UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate Recipe) (int64, error) {
 	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
@@ -219,7 +207,7 @@ func (recipeColl *RecipeCollection) UpdateRecipeByID(ctx context.Context, recipe
 		update["$set"].(bson.M)["userID"] = recipeUpdate.UserID
 	}
 
-	updateResult, err := recipeColl.collection.UpdateOne(ctx, filter, update)
+	updateResult, err := store.recipeCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Err(err).Msgf("failed to update recipe with recipe recipeID %s", recipeID)
 		return 0, err
@@ -237,7 +225,7 @@ func (recipeColl *RecipeCollection) UpdateRecipeByID(ctx context.Context, recipe
 	return modifiedCount, err
 }
 
-func (recipeColl *RecipeCollection) DeleteRecipeByID(ctx context.Context, recipeID string) (int64, error) {
+func (store *MongoDBStore) DeleteRecipeByID(ctx context.Context, recipeID string) (int64, error) {
 	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
@@ -248,7 +236,7 @@ func (recipeColl *RecipeCollection) DeleteRecipeByID(ctx context.Context, recipe
 		"_id": primitiveRecipeID,
 	}
 
-	deleteResult, err := recipeColl.collection.DeleteOne(ctx, filter)
+	deleteResult, err := store.recipeCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Err(err).Msgf("failed to delete recipe with recipeID %s", recipeID)
 		return 0, err

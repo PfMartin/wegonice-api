@@ -20,10 +20,6 @@ make db-connect
 
 ## Create swagger documentation
 
-1. Install swag
-2. Generate swagger documentation
-
-```zsh
-make get-swag
-make docs
-```
+- Install swag with `make get-swag`
+- Generate swagger documentation with `make docs`
+- Documenation is accessible on the route `{basePath}/docs/index.html`

@@ -1,26 +1,48 @@
 package api
 
 import (
+	"time"
+
+	"github.com/PfMartin/wegonice-api/db"
+	"github.com/PfMartin/wegonice-api/token"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Server struct {
-	dbClient *mongo.Client
-	dbName   string
-	url      string
-	basePath string
-	router   *gin.Engine
+	config     ServerConfig
+	store      db.DBStore
+	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
-func NewServer(dbClient *mongo.Client, dbName string, url string, basePath string) *Server {
+type ServerConfig struct {
+	url                  string
+	basePath             string
+	accessTokenDuration  time.Duration
+	refreshTokenDuration time.Duration
+}
+
+func NewServer(store db.DBStore, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
+	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
+	if err != nil {
+		log.Err(err).Msg("cannot create token maker")
+		return nil
+	}
+
+	config := ServerConfig{
+		url:                  url,
+		basePath:             basePath,
+		accessTokenDuration:  accessTokenDuration,
+		refreshTokenDuration: refreshTokenDuration,
+	}
+
 	server := &Server{
-		dbClient: dbClient,
-		dbName:   dbName,
-		url:      url,
-		basePath: basePath,
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
 	}
 
 	server.setupRoutes()
@@ -31,14 +53,18 @@ func NewServer(dbClient *mongo.Client, dbName string, url string, basePath strin
 func (server *Server) setupRoutes() {
 	router := gin.Default()
 
-	v1Routes := router.Group(server.basePath)
+	v1Routes := router.Group(server.config.basePath)
 
-	v1Routes.GET("/heartbeat", server.getHeartbeat)
 	v1Routes.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	v1Routes.GET("/heartbeat", server.getHeartbeat)
+
+	authRoutes := v1Routes.Group("/auth")
+	authRoutes.POST("/register", server.registerUser)
+	authRoutes.POST("/login", server.loginUser)
 
 	server.router = router
 }
 
 func (server *Server) Start() error {
-	return server.router.Run(server.url)
+	return server.router.Run(server.config.url)
 }

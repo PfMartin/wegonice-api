@@ -39,8 +39,20 @@ type User struct {
 	PasswordHash string `bson:"passwordHash" json:"passwordHash"`
 	Password     string `bson:"password" json:"password" binding:"required"`
 	Role         Role   `bson:"role" json:"role,omitempty"`
+	IsActive     bool   `bson:"isActive" json:"isActive,omitempty"`
 	CreatedAt    int64  `bson:"createdAt" json:"createdAt,omitempty"`
 	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt,omitempty"`
+}
+
+type Session struct {
+	ID           string `bson:"_id" json:"id"`
+	UserID       string `bson:"userId" json:"userId"`
+	User         User   `bson:"user" json:"user"`
+	RefreshToken string `bson:"refreshToken" json:"refreshToken"`
+	UserAgent    string `bson:"userAgent" json:"userAgent"`
+	IsBlocked    bool   `bson:"isBlocked" json:"isBlocked"`
+	ClientIP     string `bson:"clientIp" json:"clientIp"`
+	ExpiresAt    int64  `bson:"expiresAt" json:"expiresAt"`
 }
 
 type Author struct {

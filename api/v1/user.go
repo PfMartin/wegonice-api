@@ -10,15 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type authUserBody struct {
-	Email    string `json:"email,omitempty" binding:"required"` //TODO: Email validation
-	Password string `json:"password,omitempty" binding:"required,min=6"`
-} // @name authUserBody
-
 func (server *Server) registerUser(ctx *gin.Context) {
 	var credentials authUserBody
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
+		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
 
@@ -33,26 +28,17 @@ func (server *Server) registerUser(ctx *gin.Context) {
 
 	_, err := server.store.CreateUser(c, userToCreate)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusNotAcceptable, err) // TODO: Create proper error response
+		NewErrorNotAcceptable(err).Send(ctx)
 		return
 	}
 
 	ctx.Status(http.StatusCreated)
 }
 
-type loginResponse struct {
-	SessionID             string  `json:"sessionId"`
-	AccessToken           string  `json:"accessToken"`
-	AccessTokenExpiresAt  int64   `json:"accessTokenExpiresAt"`
-	RefreshToken          string  `json:"refreshToken"`
-	RefreshTokenExpiresAt int64   `json:"refreshTokenExpiresAt"`
-	User                  db.User `json:"user"`
-} // @name loginResponse
-
 func (server *Server) loginUser(ctx *gin.Context) {
 	var credentials authUserBody
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, err) // TODO: Create proper error response
+		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
 
@@ -60,25 +46,25 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	defer cancel()
 	user, err := server.store.GetUserByEmail(c, credentials.Email)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusNotFound, err) // TODO: Create proper error response
+		NewErrorNotFound(err).Send(ctx)
 		return
 	}
 
 	err = util.CheckPassword(credentials.Password, user.PasswordHash)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, err)
+		NewErrorUnauthorized(err).Send(ctx)
 		return
 	}
 
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.accessTokenDuration)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		NewErrorInternalSeverError(err).Send(ctx)
 		return
 	}
 
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.refreshTokenDuration)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		NewErrorInternalSeverError(err).Send(ctx)
 		return
 	}
 
@@ -92,7 +78,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		NewErrorInternalSeverError(err).Send(ctx)
 		return
 	}
 

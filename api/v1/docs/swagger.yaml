@@ -1,21 +1,195 @@
+basePath: /api/v1
 definitions:
+  ErrorBadRequest:
+    properties:
+      message:
+        example: Failed to parse data
+        type: string
+      statusCode:
+        example: 400
+        type: integer
+      statusText:
+        example: Bad Request
+        type: string
+    type: object
+  ErrorInternalServerError:
+    properties:
+      message:
+        example: An internal server error occurred
+        type: string
+      statusCode:
+        example: 500
+        type: integer
+      statusText:
+        example: Internal Server Error
+        type: string
+    type: object
+  ErrorNotAcceptable:
+    properties:
+      message:
+        example: Provided input is not acceptable
+        type: string
+      statusCode:
+        example: 406
+        type: integer
+      statusText:
+        example: Not Acceptable
+        type: string
+    type: object
+  ErrorNotFound:
+    properties:
+      message:
+        example: Could not find requested data
+        type: string
+      statusCode:
+        example: 404
+        type: integer
+      statusText:
+        example: Not Found
+        type: string
+    type: object
+  ErrorUnauthorized:
+    properties:
+      message:
+        example: Unauthorized for retrieving this information
+        type: string
+      statusCode:
+        example: 401
+        type: integer
+      statusText:
+        example: Unauthorized
+        type: string
+    type: object
+  authUserBody:
+    properties:
+      email:
+        description: 'TODO: Email validation'
+        example: user@example.com
+        type: string
+      password:
+        example: s3cr3tP@ssw0rd
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   heartbeatResponse:
     properties:
       status:
         example: ok
         type: string
     type: object
+  loginResponse:
+    properties:
+      accessToken:
+        example: v2.local.example-session-token
+        type: string
+      accessTokenExpiresAt:
+        example: 1714462120
+        type: integer
+      refreshToken:
+        example: v2.local.example-refresh-token
+        type: string
+      refreshTokenExpiresAt:
+        example: 1714462120
+        type: integer
+      sessionId:
+        example: 660c4b99bc1bc4aabe3e6cd1
+        type: string
+      userEmail:
+        example: user@example.com
+        type: string
+    type: object
 externalDocs:
   description: OpenAPI
   url: https://swagger.io/resources/open-api/
+host: localhost:8000
 info:
   contact:
     email: martinpfatrisch@gmail.com
     name: Martin Pfatrisch
     url: https://github.com/PfMartin
+  description: API for the vegan recipes
   license:
     name: All Rights Reserved
+  termsOfService: http://swagger.io/terms/
+  title: WeGoNice API
+  version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: A registered user is logged in with their email and matching password.
+      operationId: auth-login-user
+      parameters:
+      - description: Credentials for the login
+        in: body
+        name: userCredentials
+        required: true
+        schema:
+          $ref: '#/definitions/authUserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login response with required tokens
+          schema:
+            $ref: '#/definitions/loginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+        "406":
+          description: Not Acceptable
+          schema:
+            $ref: '#/definitions/ErrorNotAcceptable'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Logs a user in
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: A new user is registered by setting an unique email address and
+        a password. The admins have to approve and active the user manually.
+      operationId: auth-register-user
+      parameters:
+      - description: Credentials for the registration
+        in: body
+        name: userCredentials
+        required: true
+        schema:
+          $ref: '#/definitions/authUserBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "406":
+          description: Not Acceptable
+          schema:
+            $ref: '#/definitions/ErrorNotAcceptable'
+      summary: Registers a user
+      tags:
+      - auth
   /heartbeat:
     get:
       consumes:
@@ -28,7 +202,7 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/heartbeatResponse'
-      summary: Check heart beat
+      summary: Check heartbeat
       tags:
       - heartbeat
 securityDefinitions:

@@ -7,7 +7,7 @@ import (
 )
 
 type ErrorBadRequest struct {
-	StatusText string `json:"statusText" example:"BadRequest"`
+	StatusText string `json:"statusText" example:"Bad Request"`
 	StatusCode int    `json:"statusCode" example:"400"`
 	Message    string `json:"message" example:"Failed to parse data"`
 } // @name ErrorBadRequest
@@ -24,26 +24,26 @@ func (err *ErrorBadRequest) Send(ctx *gin.Context) {
 	ctx.AbortWithStatusJSON(err.StatusCode, err)
 }
 
-type ErrorInternalSeverError struct {
-	StatusText string `json:"statusText" example:"InternalServerError"`
+type ErrorInternalServerError struct {
+	StatusText string `json:"statusText" example:"Internal Server Error"`
 	StatusCode int    `json:"statusCode" example:"500"`
 	Message    string `json:"message" example:"An internal server error occurred"`
-} // @name ErrorInternalSeverError
+} // @name ErrorInternalServerError
 
-func NewErrorInternalSeverError(err error) *ErrorInternalSeverError {
-	return &ErrorInternalSeverError{
+func NewErrorInternalServerError(err error) *ErrorInternalServerError {
+	return &ErrorInternalServerError{
 		StatusText: http.StatusText(http.StatusInternalServerError),
 		StatusCode: http.StatusInternalServerError,
 		Message:    err.Error(),
 	}
 }
 
-func (err *ErrorInternalSeverError) Send(ctx *gin.Context) {
+func (err *ErrorInternalServerError) Send(ctx *gin.Context) {
 	ctx.AbortWithStatusJSON(err.StatusCode, err)
 }
 
 type ErrorNotAcceptable struct {
-	StatusText string `json:"statusText" example:"NotAcceptable"`
+	StatusText string `json:"statusText" example:"Not Acceptable"`
 	StatusCode int    `json:"statusCode" example:"406"`
 	Message    string `json:"message" example:"Provided input is not acceptable"`
 } // @name ErrorNotAcceptable
@@ -61,7 +61,7 @@ func (err *ErrorNotAcceptable) Send(ctx *gin.Context) {
 }
 
 type ErrorNotFound struct {
-	StatusText string `json:"statusText" example:"NotFound"`
+	StatusText string `json:"statusText" example:"Not Found"`
 	StatusCode int    `json:"statusCode" example:"404"`
 	Message    string `json:"message" example:"Could not find requested data"`
 } // @name ErrorNotFound

@@ -10,6 +10,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// registerUser
+//
+// @Summary 		Registers a user
+// @Description A new user is registered by setting an unique email address and a password. The admins have to approve and active the user manually.
+// @ID					auth-register-user
+// @Tags				auth
+// @Accept			json
+// @Produce			json
+// @Param				userCredentials 	body				authUserBody				true		"Credentials for the registration"
+// @Success			201
+// @Failure			400								{object}		ErrorBadRequest							"Bad Request"
+// @Failure 		406								{object}		ErrorNotAcceptable					"Not Acceptable"
+// @Router			/auth/register		[post]
 func (server *Server) registerUser(ctx *gin.Context) {
 	var credentials authUserBody
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
@@ -35,6 +48,22 @@ func (server *Server) registerUser(ctx *gin.Context) {
 	ctx.Status(http.StatusCreated)
 }
 
+// loginUser
+//
+// @Summary 		Logs a user in
+// @Description A registered user is logged in with their email and matching password.
+// @ID					auth-login-user
+// @Tags				auth
+// @Accept			json
+// @Produce			json
+// @Param				userCredentials 	body				authUserBody							true		"Credentials for the login"
+// @Success			200								{object}		loginResponse											"Login response with required tokens"
+// @Failure			400								{object}		ErrorBadRequest										"Bad Request"
+// @Failure			401								{object}		ErrorUnauthorized									"Unauthorized"
+// @Failure			404								{object}		ErrorNotFound											"Not Found"
+// @Failure 		406								{object}		ErrorNotAcceptable								"Not Acceptable"
+// @Failure 		500								{object}		ErrorInternalServerError					"Internal Server Error"
+// @Router			/auth/login				[post]
 func (server *Server) loginUser(ctx *gin.Context) {
 	var credentials authUserBody
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
@@ -58,13 +87,13 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.accessTokenDuration)
 	if err != nil {
-		NewErrorInternalSeverError(err).Send(ctx)
+		NewErrorInternalServerError(err).Send(ctx)
 		return
 	}
 
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.refreshTokenDuration)
 	if err != nil {
-		NewErrorInternalSeverError(err).Send(ctx)
+		NewErrorInternalServerError(err).Send(ctx)
 		return
 	}
 
@@ -78,7 +107,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		NewErrorInternalSeverError(err).Send(ctx)
+		NewErrorInternalServerError(err).Send(ctx)
 		return
 	}
 
@@ -88,7 +117,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		AccessTokenExpiresAt:  accessPayload.ExpiresAt,
 		RefreshToken:          refreshToken,
 		RefreshTokenExpiresAt: refreshPayload.ExpiresAt,
-		User:                  user,
+		UserEmail:             user.ID,
 	}
 
 	ctx.JSON(http.StatusAccepted, res)

@@ -24,19 +24,24 @@ func printBanner() {
 `)
 }
 
-// // @termsOfService  http://swagger.io/terms/
+// @title											WeGoNice API
+// @version										1.0
+// @description 							API for the vegan recipes
+// @termsOfService  					http://swagger.io/terms/
 
-// @contact.name   Martin Pfatrisch
-// @contact.url    https://github.com/PfMartin
-// @contact.email  martinpfatrisch@gmail.com
+// @contact.name  						Martin Pfatrisch
+// @contact.url   						https://github.com/PfMartin
+// @contact.email 						martinpfatrisch@gmail.com
 
-// @license.name  All Rights Reserved
-// // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name  						All Rights Reserved
 
-// @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.basic	BasicAuth
 
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
+
+// @host											localhost:8000
+// @BasePath									/api/v1
 func main() {
 	printBanner()
 

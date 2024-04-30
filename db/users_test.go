@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -32,8 +31,6 @@ func createRandomUser(t *testing.T, store *MongoDBStore) User {
 
 	hashedPassword, err := util.HashPassword(user.Password)
 	require.NoError(t, err)
-
-	fmt.Println(user.CreatedAt)
 
 	return User{
 		ID:           userID,

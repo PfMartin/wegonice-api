@@ -24,7 +24,7 @@ func TestUnitErrorResponses(t *testing.T) {
 		NewErrorBadRequest(fmt.Errorf("bad request")).Send(ctx)
 	})
 	router.GET("/internal_server_error", func(ctx *gin.Context) {
-		NewErrorInternalSeverError(fmt.Errorf("internal server error")).Send(ctx)
+		NewErrorInternalServerError(fmt.Errorf("internal server error")).Send(ctx)
 	})
 	router.GET("/not_acceptable", func(ctx *gin.Context) {
 		NewErrorNotAcceptable(fmt.Errorf("not acceptable")).Send(ctx)

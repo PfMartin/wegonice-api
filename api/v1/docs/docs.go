@@ -9,6 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
+        "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "Martin Pfatrisch",
             "url": "https://github.com/PfMartin",
@@ -22,6 +23,115 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/login": {
+            "post": {
+                "description": "A registered user is logged in with their email and matching password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logs a user in",
+                "operationId": "auth-login-user",
+                "parameters": [
+                    {
+                        "description": "Credentials for the login",
+                        "name": "userCredentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authUserBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login response with required tokens",
+                        "schema": {
+                            "$ref": "#/definitions/loginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    },
+                    "406": {
+                        "description": "Not Acceptable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotAcceptable"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "A new user is registered by setting an unique email address and a password. The admins have to approve and active the user manually.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Registers a user",
+                "operationId": "auth-register-user",
+                "parameters": [
+                    {
+                        "description": "Credentials for the registration",
+                        "name": "userCredentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authUserBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "406": {
+                        "description": "Not Acceptable",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotAcceptable"
+                        }
+                    }
+                }
+            }
+        },
         "/heartbeat": {
             "get": {
                 "description": "Check if the API is reachable with this route",
@@ -34,7 +144,7 @@ const docTemplate = `{
                 "tags": [
                     "heartbeat"
                 ],
-                "summary": "Check heart beat",
+                "summary": "Check heartbeat",
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -47,12 +157,145 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "ErrorBadRequest": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Failed to parse data"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "statusText": {
+                    "type": "string",
+                    "example": "Bad Request"
+                }
+            }
+        },
+        "ErrorInternalServerError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "An internal server error occurred"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "statusText": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                }
+            }
+        },
+        "ErrorNotAcceptable": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Provided input is not acceptable"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 406
+                },
+                "statusText": {
+                    "type": "string",
+                    "example": "Not Acceptable"
+                }
+            }
+        },
+        "ErrorNotFound": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Could not find requested data"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 404
+                },
+                "statusText": {
+                    "type": "string",
+                    "example": "Not Found"
+                }
+            }
+        },
+        "ErrorUnauthorized": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Unauthorized for retrieving this information"
+                },
+                "statusCode": {
+                    "type": "integer",
+                    "example": 401
+                },
+                "statusText": {
+                    "type": "string",
+                    "example": "Unauthorized"
+                }
+            }
+        },
+        "authUserBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "TODO: Email validation",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "s3cr3tP@ssw0rd"
+                }
+            }
+        },
         "heartbeatResponse": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "string",
                     "example": "ok"
+                }
+            }
+        },
+        "loginResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string",
+                    "example": "v2.local.example-session-token"
+                },
+                "accessTokenExpiresAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "refreshToken": {
+                    "type": "string",
+                    "example": "v2.local.example-refresh-token"
+                },
+                "refreshTokenExpiresAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "sessionId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe3e6cd1"
+                },
+                "userEmail": {
+                    "type": "string",
+                    "example": "user@example.com"
                 }
             }
         }
@@ -70,12 +313,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8000",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "WeGoNice API",
+	Description:      "API for the vegan recipes",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

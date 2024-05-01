@@ -7,7 +7,7 @@ import (
 
 type Pagination struct {
 	PageID   int64 `form:"page_id" json:"page_id" binding:"min=1"`
-	PageSize int64 `form:"page_id" json:"page_size" binding:"min=0,max=500"`
+	PageSize int64 `form:"page_size" json:"page_size" binding:"min=0,max=500"`
 }
 
 func (pagination *Pagination) getFindOptions() *options.FindOptions {
@@ -69,7 +69,7 @@ type Author struct {
 	UserCreated  User   `bson:"userCreated" json:"userCreated"`
 	CreatedAt    int64  `bson:"createdAt" json:"createdAt"`
 	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt"`
-}
+} // @name Author
 
 type Category string
 

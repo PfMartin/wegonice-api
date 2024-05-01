@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/PfMartin/wegonice-api/db"
 	"github.com/gin-gonic/gin"
@@ -38,4 +39,39 @@ func (server *Server) listAuthors(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, authors)
+}
+
+// getAuthorByID
+//
+// @Summary			Get one author by ID
+// @Description	One author, which matches the ID is returned
+// @ID					authors-get-author-by-id
+// @Tags				authors
+// @Accept			json
+// @Produce			json
+// @Param				id							path 				int									true	"ID of the desired author"
+// @Success			200							{object}		AuthorResponse						"Author that matches the ID"
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure			404							{object}		ErrorNotFound							"Not Found"
+// @Failure 		500							{object}		ErrorInternalServerError	"Internal Server Error"
+// @Router			/authors/{id}		[get]
+func (server *Server) getAuthorByID(ctx *gin.Context) {
+	var uriParam getByIDRequest
+	if err := ctx.ShouldBindUri(&uriParam); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	author, err := server.store.GetAuthorByID(ctx, uriParam.ID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to find author") { // TODO: Find better method to distinguish between error types (enum?)
+			NewErrorNotFound(err).Send(ctx)
+			return
+		}
+
+		NewErrorInternalServerError(err).Send(ctx)
+	}
+
+	ctx.JSON(http.StatusOK, author)
 }

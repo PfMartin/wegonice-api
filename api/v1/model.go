@@ -2,6 +2,10 @@ package api
 
 import "github.com/PfMartin/wegonice-api/db"
 
+type getByIDRequest struct {
+	ID string `uri:"id" binding:"required"`
+}
+
 type authUserBody struct {
 	Email    string `json:"email,omitempty" binding:"required" example:"user@example.com"` //TODO: Email validation
 	Password string `json:"password,omitempty" binding:"required,min=6" example:"s3cr3tP@ssw0rd"`

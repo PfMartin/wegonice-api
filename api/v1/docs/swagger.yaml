@@ -306,6 +306,44 @@ paths:
       summary: List all authors
       tags:
       - authors
+  /authors/{id}:
+    get:
+      consumes:
+      - application/json
+      description: One author, which matches the ID is returned
+      operationId: authors-get-author-by-id
+      parameters:
+      - description: ID of the desired author
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Author that matches the ID
+          schema:
+            $ref: '#/definitions/AuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Get one author by ID
+      tags:
+      - authors
   /heartbeat:
     get:
       consumes:

@@ -68,9 +68,64 @@ func TestUnitListAuthors(t *testing.T) {
 				err := json.NewDecoder(recorder.Body).Decode(&gotAuthors)
 				require.NoError(t, err)
 
+				require.Equal(t, 10, len(gotAuthors))
+
 				for i, expectedAuthor := range authors {
 					requireAuthorComparison(t, expectedAuthor, gotAuthors[i])
 				}
+			},
+		},
+		{
+			name:  "Success with pagination from 5 to 10",
+			query: "?page_id=5&page_size=10",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageID:   5,
+					PageSize: 10,
+				}
+
+				store.EXPECT().GetAllAuthors(gomock.Any(), pagination).Times(1).Return(authors[4:], nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var gotAuthors []db.Author
+				err := json.NewDecoder(recorder.Body).Decode(&gotAuthors)
+				require.NoError(t, err)
+
+				require.Equal(t, 6, len(gotAuthors))
+
+				for i, expectedAuthor := range authors[4:] {
+					requireAuthorComparison(t, expectedAuthor, gotAuthors[i])
+				}
+			},
+		},
+		{
+			name:  "Fail with missing page_size",
+			query: "?page_id=5",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageID: 5,
+				}
+
+				store.EXPECT().GetAllAuthors(gomock.Any(), pagination).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name:  "Fail with missing page_id",
+			query: "?page_size=10",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageSize: 10,
+				}
+
+				store.EXPECT().GetAllAuthors(gomock.Any(), pagination).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 	}

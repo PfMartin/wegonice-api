@@ -15,9 +15,9 @@ import (
 // @Tags				authors
 // @Accept			json
 // @Produce			json
-// @Param				page_id			int					true											"Offset for the pagination"
-// @Param				page_size		int					true											"Number of elements in one page"
-// @Success			200					{array}			author										"List of authors matching the given pagination parameters"
+// @Param				page_id			path 				int									true	"Offset for the pagination"
+// @Param				page_size		path 				int									true	"Number of elements in one page"
+// @Success			200					{array}			AuthorResponse						"List of authors matching the given pagination parameters"
 // @Failure			400					{object}		ErrorBadRequest						"Bad Request"
 // @Failure			401					{object}		ErrorUnauthorized					"Unauthorized"
 // @Failure 		500					{object}		ErrorInternalServerError	"Internal Server Error"
@@ -28,6 +28,8 @@ func (server *Server) listAuthors(ctx *gin.Context) {
 		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
+
+	// TODO: Add sorting
 
 	authors, err := server.store.GetAllAuthors(ctx, pagination)
 	if err != nil {

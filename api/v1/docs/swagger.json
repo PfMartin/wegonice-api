@@ -126,6 +126,67 @@
                 }
             }
         },
+        "/authors": {
+            "get": {
+                "description": "All authors are listed in a paginated manner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "List all authors",
+                "operationId": "authors-list-authors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Offset for the pagination",
+                        "name": "page_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of elements in one page",
+                        "name": "page_size",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of authors matching the given pagination parameters",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/AuthorResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/heartbeat": {
             "get": {
                 "description": "Check if the API is reachable with this route",
@@ -151,6 +212,65 @@
         }
     },
     "definitions": {
+        "AuthorResponse": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "firstName": {
+                    "type": "string",
+                    "example": "Moe"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "moezarella.png"
+                },
+                "instagramUrl": {
+                    "type": "string",
+                    "example": "https://wwww.instagram.com/moezarella/"
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Zarella"
+                },
+                "modifiedAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Moe Zarella"
+                },
+                "recipeCount": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "userCreated": {
+                    "$ref": "#/definitions/api.UserResponse"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe3e6cd1"
+                },
+                "websiteUrl": {
+                    "type": "string",
+                    "example": "https://www.moezarella.com"
+                },
+                "youtubeUrl": {
+                    "type": "string",
+                    "example": "https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA"
+                }
+            }
+        },
         "ErrorBadRequest": {
             "type": "object",
             "properties": {
@@ -236,6 +356,42 @@
                 }
             }
         },
+        "api.UserResponse": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe3e6cd1"
+                },
+                "isActive": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "modifiedAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "role": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Role"
+                        }
+                    ],
+                    "example": "user"
+                }
+            }
+        },
         "authUserBody": {
             "type": "object",
             "required": [
@@ -254,6 +410,17 @@
                     "example": "s3cr3tP@ssw0rd"
                 }
             }
+        },
+        "db.Role": {
+            "type": "string",
+            "enum": [
+                "user",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "UserRole",
+                "AdminRole"
+            ]
         },
         "heartbeatResponse": {
             "type": "object",

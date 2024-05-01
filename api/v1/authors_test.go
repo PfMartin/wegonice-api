@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,18 +11,20 @@ import (
 	"github.com/PfMartin/wegonice-api/db"
 	mock_db "github.com/PfMartin/wegonice-api/db/mock"
 	"github.com/PfMartin/wegonice-api/util"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func randomAuthor(t *testing.T) db.Author {
+func randomAuthor(t *testing.T) (db.Author, primitive.ObjectID) {
 	t.Helper()
 
 	userID := primitive.NewObjectID().Hex()
+	authorID := primitive.NewObjectID()
 
 	return db.Author{
-		ID:           primitive.NewObjectID().Hex(),
+		ID:           authorID.Hex(),
 		FirstName:    util.RandomString(6),
 		LastName:     util.RandomString(6),
 		Name:         util.RandomString(6),
@@ -35,13 +38,15 @@ func randomAuthor(t *testing.T) db.Author {
 			ID:    userID,
 			Email: util.RandomEmail(),
 		},
-	}
+	}, authorID
 }
 
 func TestUnitListAuthors(t *testing.T) {
 	var authors []db.Author
-	for range 10 {
-		authors = append(authors, randomAuthor(t))
+	for i := 0; i < 10; i++ {
+		author, _ := randomAuthor(t)
+
+		authors = append(authors, author)
 	}
 
 	testCases := []struct {
@@ -153,8 +158,9 @@ func TestUnitListAuthors(t *testing.T) {
 
 func TestUnitGetAuthorByID(t *testing.T) {
 	var authors []db.Author
-	for range 2 {
-		authors = append(authors, randomAuthor(t))
+	for i := 0; i < 2; i++ {
+		author, _ := randomAuthor(t)
+		authors = append(authors, author)
 	}
 
 	testCases := []struct {
@@ -214,6 +220,120 @@ func TestUnitGetAuthorByID(t *testing.T) {
 
 			url := fmt.Sprintf("/api/v1/authors/%s", tc.id)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUnitCreateAuthor(t *testing.T) {
+	author, primitiveID := randomAuthor(t)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success creating a new author",
+			body: gin.H{
+				"name":      author.Name,
+				"firstName": author.FirstName,
+				"lastName":  author.LastName,
+				"userId":    author.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
+					Name:      author.Name,
+					FirstName: author.FirstName,
+					LastName:  author.LastName,
+					UserID:    author.UserID,
+				}).Times(1).Return(primitiveID, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing name",
+			body: gin.H{
+				"firstName": author.FirstName,
+				"lastName":  author.LastName,
+				"userId":    author.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
+					Name:      author.Name,
+					FirstName: author.FirstName,
+					LastName:  author.LastName,
+					UserID:    author.UserID,
+				}).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing userID",
+			body: gin.H{
+				"name":      author.Name,
+				"firstName": author.FirstName,
+				"lastName":  author.LastName,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
+					Name:      author.Name,
+					FirstName: author.FirstName,
+					LastName:  author.LastName,
+					UserID:    author.UserID,
+				}).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to already existing author",
+			body: gin.H{
+				"name":      author.Name,
+				"firstName": author.FirstName,
+				"lastName":  author.LastName,
+				"userId":    author.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
+					Name:      author.Name,
+					FirstName: author.FirstName,
+					LastName:  author.LastName,
+					UserID:    author.UserID,
+				}).Times(1).Return(primitive.NilObjectID, fmt.Errorf("author with name %s already exists", author.Name))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := "/api/v1/authors/"
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)

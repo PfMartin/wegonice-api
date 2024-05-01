@@ -64,6 +64,7 @@ func (server *Server) setupRoutes() {
 
 	authorRoutes := v1Routes.Group("/authors")
 	authorRoutes.GET("", server.listAuthors)
+	authorRoutes.POST("/", server.createAuthor)
 	authorRoutes.GET("/:id", server.getAuthorByID)
 
 	server.router = router

@@ -29,6 +29,17 @@ type UserResponse struct {
 	ModifiedAt int64   `bson:"modifiedAt" json:"modifiedAt,omitempty" example:"1714462120"`
 }
 
+type AuthorBody struct {
+	FirstName    string `bson:"firstName" json:"firstName,omitempty"`
+	LastName     string `bson:"lastName" json:"lastName,omitempty"`
+	Name         string `bson:"name" json:"name" binding:"required"`
+	WebsiteURL   string `bson:"websiteUrl" json:"websiteUrl,omitempty"`
+	InstagramURL string `bson:"instagramUrl" json:"instagramUrl,omitempty"`
+	YoutubeURL   string `bson:"youtubeUrl" json:"youtubeUrl,omitempty"`
+	ImageName    string `bson:"imageName" json:"imageName,omitempty"`
+	UserID       string `bson:"userId" json:"userId,omitempty" binding:"required"`
+} // @name AuthorBody
+
 type AuthorResponse struct {
 	ID           string       `bson:"_id" json:"id" example:"660c4b99bc1bc4aabe126cd1"`
 	FirstName    string       `bson:"firstName" json:"firstName,omitempty" example:"Moe"`

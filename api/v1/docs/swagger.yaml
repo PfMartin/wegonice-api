@@ -43,6 +43,36 @@ definitions:
     required:
     - name
     type: object
+  AuthorToCreate:
+    properties:
+      firstName:
+        example: Moe
+        type: string
+      imageName:
+        example: moezarella.png
+        type: string
+      instagramUrl:
+        example: https://wwww.instagram.com/moezarella/
+        type: string
+      lastName:
+        example: Zarella
+        type: string
+      name:
+        example: Moe Zarella
+        type: string
+      userId:
+        example: 660c4b99bc1bc4aabe3e6cd1
+        type: string
+      websiteUrl:
+        example: https://www.moezarella.com
+        type: string
+      youtubeUrl:
+        example: https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA
+        type: string
+    required:
+    - name
+    - userId
+    type: object
   ErrorBadRequest:
     properties:
       message:
@@ -273,12 +303,12 @@ paths:
       operationId: authors-list-authors
       parameters:
       - description: Offset for the pagination
-        in: path
+        in: query
         name: page_id
         required: true
         type: integer
       - description: Number of elements in one page
-        in: path
+        in: query
         name: page_size
         required: true
         type: integer
@@ -304,6 +334,40 @@ paths:
           schema:
             $ref: '#/definitions/ErrorInternalServerError'
       summary: List all authors
+      tags:
+      - authors
+    post:
+      consumes:
+      - application/json
+      description: Creates a new author
+      operationId: authors-create-author
+      parameters:
+      - description: Data for the author to create
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/AuthorToCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ID of the created author
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Create new author
       tags:
       - authors
   /authors/{id}:

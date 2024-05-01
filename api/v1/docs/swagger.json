@@ -145,14 +145,14 @@
                         "type": "integer",
                         "description": "Offset for the pagination",
                         "name": "page_id",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "Number of elements in one page",
                         "name": "page_size",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -164,6 +164,57 @@
                             "items": {
                                 "$ref": "#/definitions/AuthorResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new author",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Create new author",
+                "operationId": "authors-create-author",
+                "parameters": [
+                    {
+                        "description": "Data for the author to create",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AuthorToCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "ID of the created author",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -313,6 +364,47 @@
                 },
                 "userCreated": {
                     "$ref": "#/definitions/api.UserResponse"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe3e6cd1"
+                },
+                "websiteUrl": {
+                    "type": "string",
+                    "example": "https://www.moezarella.com"
+                },
+                "youtubeUrl": {
+                    "type": "string",
+                    "example": "https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA"
+                }
+            }
+        },
+        "AuthorToCreate": {
+            "type": "object",
+            "required": [
+                "name",
+                "userId"
+            ],
+            "properties": {
+                "firstName": {
+                    "type": "string",
+                    "example": "Moe"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "moezarella.png"
+                },
+                "instagramUrl": {
+                    "type": "string",
+                    "example": "https://wwww.instagram.com/moezarella/"
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Zarella"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Moe Zarella"
                 },
                 "userId": {
                     "type": "string",

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -16,8 +17,8 @@ import (
 // @Tags				authors
 // @Accept			json
 // @Produce			json
-// @Param				page_id			path 				int									true	"Offset for the pagination"
-// @Param				page_size		path 				int									true	"Number of elements in one page"
+// @Param				page_id			query 			int									true	"Offset for the pagination"
+// @Param				page_size		query 			int									true	"Number of elements in one page"
 // @Success			200					{array}			AuthorResponse						"List of authors matching the given pagination parameters"
 // @Failure			400					{object}		ErrorBadRequest						"Bad Request"
 // @Failure			401					{object}		ErrorUnauthorized					"Unauthorized"
@@ -39,6 +40,42 @@ func (server *Server) listAuthors(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, authors)
+}
+
+// createAuthor
+//
+// @Summary			Create new author
+// @Description	Creates a new author
+// @ID					authors-create-author
+// @Tags				authors
+// @Accept			json
+// @Produce			json
+// @Param				data						body 				AuthorToCreate			true	"Data for the author to create"
+// @Success			201							string			string										"ID of the created author"
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure 		500							{object}		ErrorInternalServerError	"Internal Server Error"
+// @Router			/authors				[post]
+func (server *Server) createAuthor(ctx *gin.Context) {
+	var authorBody db.AuthorToCreate
+	if err := ctx.ShouldBindJSON(&authorBody); err != nil {
+		fmt.Println(err)
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	authorID, err := server.store.CreateAuthor(ctx, authorBody)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "author with name") { // TODO: Find better way to check error types (enum?)
+			NewErrorBadRequest(err).Send(ctx)
+			return
+		}
+
+		NewErrorInternalServerError(err).Send(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, authorID)
 }
 
 // getAuthorByID
@@ -71,6 +108,7 @@ func (server *Server) getAuthorByID(ctx *gin.Context) {
 		}
 
 		NewErrorInternalServerError(err).Send(ctx)
+		return
 	}
 
 	ctx.JSON(http.StatusOK, author)

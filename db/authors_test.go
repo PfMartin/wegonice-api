@@ -24,7 +24,7 @@ func getMongoDBStore(t *testing.T) *MongoDBStore {
 func createRandomAuthor(t *testing.T, store *MongoDBStore, userID string) Author {
 	t.Helper()
 
-	author := Author{
+	author := AuthorToCreate{
 		FirstName:    util.RandomString(6),
 		LastName:     util.RandomString(6),
 		Name:         util.RandomString(6),
@@ -63,7 +63,17 @@ func TestUnitCreateAuthor(t *testing.T) {
 	t.Run("Creates a new author and throws an error when the same author should be created again", func(t *testing.T) {
 		author := createRandomAuthor(t, store, user.ID)
 
-		_, err := store.CreateAuthor(context.Background(), author)
+		authorToCreate := AuthorToCreate{
+			FirstName:    author.FirstName,
+			LastName:     author.LastName,
+			Name:         author.Name,
+			WebsiteURL:   author.WebsiteURL,
+			InstagramURL: author.InstagramURL,
+			YoutubeURL:   author.YoutubeURL,
+			ImageName:    author.ImageName,
+			UserID:       author.UserID,
+		}
+		_, err := store.CreateAuthor(context.Background(), authorToCreate)
 		require.Error(t, err)
 	})
 }

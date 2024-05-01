@@ -42,7 +42,7 @@ var authorProjectStage = bson.M{"$project": bson.M{
 	},
 }}
 
-func (store *MongoDBStore) CreateAuthor(ctx context.Context, author Author) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateAuthor(ctx context.Context, author AuthorToCreate) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"name": 1},
 		Options: options.Index().SetUnique(true),

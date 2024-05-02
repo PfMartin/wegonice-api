@@ -19,6 +19,7 @@ type Config struct {
 	APIURL               string        `mapstructure:"API_URL"`
 	APIBasePath          string        `mapstructure:"API_BASE_PATH"`
 	APIVersion           string        `mapstructure:"API_VERSION"`
+	CorsAllowedOrigins   []string      `mapstructure:"CORS_ALLOWED_ORIGINS"`
 }
 
 func NewConfig(configPath string, configName string) (config Config, err error) {

@@ -26,9 +26,10 @@ func newTestServer(t *testing.T, store db.DBStore) *Server {
 		RefreshTokenDuration: time.Minute,
 		APIURL:               "localhost:8001",
 		APIBasePath:          "/api/v1",
+		CorsAllowedOrigins:   []string{"http://*", "https://*"},
 	}
 
-	server := NewServer(store, config.APIURL, config.APIBasePath, config.TokenSymmetricKey, config.AccessTokenDuration, config.RefreshTokenDuration)
+	server := NewServer(store, config.APIURL, config.APIBasePath, config.TokenSymmetricKey, config.AccessTokenDuration, config.RefreshTokenDuration, config.CorsAllowedOrigins)
 
 	return server
 }

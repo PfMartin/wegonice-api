@@ -246,7 +246,7 @@ const docTemplate = `{
         },
         "/authors/{id}": {
             "get": {
-                "description": "One author, which matches the ID is returned",
+                "description": "One author, which matches the ID, is returned",
                 "consumes": [
                     "application/json"
                 ],
@@ -296,6 +296,107 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "One author, which matches the ID, is deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Delete one author by ID",
+                "operationId": "authors-delete-author-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired author to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "One author, which matches the ID, is modified with the provided patch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authors"
+                ],
+                "summary": "Patch one author by ID",
+                "operationId": "authors-patch-author-by-id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired author to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch for modifying the author",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AuthorUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
                         }
                     }
                 }
@@ -415,6 +516,39 @@ const docTemplate = `{
                 "userId": {
                     "type": "string",
                     "example": "660c4b99bc1bc4aabe3e6cd1"
+                },
+                "websiteUrl": {
+                    "type": "string",
+                    "example": "https://www.moezarella.com"
+                },
+                "youtubeUrl": {
+                    "type": "string",
+                    "example": "https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA"
+                }
+            }
+        },
+        "AuthorUpdate": {
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string",
+                    "example": "Moe"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "moezarella.png"
+                },
+                "instagramUrl": {
+                    "type": "string",
+                    "example": "https://wwww.instagram.com/moezarella/"
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Zarella"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Moe Zarella"
                 },
                 "websiteUrl": {
                     "type": "string",

@@ -18,7 +18,7 @@ type DBStore interface {
 	CreateAuthor(ctx context.Context, author AuthorToCreate) (primitive.ObjectID, error)
 	GetAllAuthors(ctx context.Context, pagination Pagination) ([]Author, error)
 	GetAuthorByID(ctx context.Context, authorID string) (Author, error)
-	UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate Author) (int64, error)
+	UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate AuthorUpdate) (int64, error)
 	DeleteAuthorByID(ctx context.Context, authorID string) (int64, error)
 
 	CreateRecipe(ctx context.Context, recipe Recipe) (primitive.ObjectID, error)

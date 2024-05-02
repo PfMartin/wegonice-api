@@ -146,7 +146,7 @@ func (store *MongoDBStore) GetAuthorByID(ctx context.Context, authorID string) (
 	return author, nil
 }
 
-func (store *MongoDBStore) UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate Author) (int64, error) {
+func (store *MongoDBStore) UpdateAuthorByID(ctx context.Context, authorID string, authorUpdate AuthorUpdate) (int64, error) {
 	primitiveAuthorID, err := primitive.ObjectIDFromHex(authorID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse authorID %s to primitive ObjectID", authorID)
@@ -189,7 +189,7 @@ func (store *MongoDBStore) UpdateAuthorByID(ctx context.Context, authorID string
 	}
 
 	if updateResult.MatchedCount < 1 {
-		log.Info().Msgf("could not find author with authorID %s", authorID)
+		log.Info().Msgf("failed to find author with authorID %s", authorID)
 	}
 
 	modifiedCount := updateResult.ModifiedCount

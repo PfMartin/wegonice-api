@@ -73,6 +73,30 @@ definitions:
     - name
     - userId
     type: object
+  AuthorUpdate:
+    properties:
+      firstName:
+        example: Moe
+        type: string
+      imageName:
+        example: moezarella.png
+        type: string
+      instagramUrl:
+        example: https://wwww.instagram.com/moezarella/
+        type: string
+      lastName:
+        example: Zarella
+        type: string
+      name:
+        example: Moe Zarella
+        type: string
+      websiteUrl:
+        example: https://www.moezarella.com
+        type: string
+      youtubeUrl:
+        example: https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA
+        type: string
+    type: object
   ErrorBadRequest:
     properties:
       message:
@@ -371,10 +395,41 @@ paths:
       tags:
       - authors
   /authors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: One author, which matches the ID, is deleted
+      operationId: authors-delete-author-by-id
+      parameters:
+      - description: ID of the desired author to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Delete one author by ID
+      tags:
+      - authors
     get:
       consumes:
       - application/json
-      description: One author, which matches the ID is returned
+      description: One author, which matches the ID, is returned
       operationId: authors-get-author-by-id
       parameters:
       - description: ID of the desired author
@@ -406,6 +461,44 @@ paths:
           schema:
             $ref: '#/definitions/ErrorInternalServerError'
       summary: Get one author by ID
+      tags:
+      - authors
+    patch:
+      consumes:
+      - application/json
+      description: One author, which matches the ID, is modified with the provided
+        patch
+      operationId: authors-patch-author-by-id
+      parameters:
+      - description: ID of the desired author to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch for modifying the author
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/AuthorUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Patch one author by ID
       tags:
       - authors
   /heartbeat:

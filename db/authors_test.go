@@ -165,7 +165,7 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 
 	createdAuthor := createRandomAuthor(t, store, user.ID)
 
-	authorUpdate := Author{
+	authorUpdate := AuthorUpdate{
 		Name:         util.RandomString(4),
 		LastName:     util.RandomString(6),
 		FirstName:    util.RandomString(6),
@@ -178,7 +178,7 @@ func TestUnitUpdateAuthorByID(t *testing.T) {
 	testCases := []struct {
 		name          string
 		authorID      string
-		authorUpdate  Author
+		authorUpdate  AuthorUpdate
 		hasError      bool
 		modifiedCount int64
 	}{

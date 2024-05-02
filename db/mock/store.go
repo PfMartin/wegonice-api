@@ -262,7 +262,7 @@ func (mr *MockDBStoreMockRecorder) GetUserByID(arg0, arg1 interface{}) *gomock.C
 }
 
 // UpdateAuthorByID mocks base method.
-func (m *MockDBStore) UpdateAuthorByID(arg0 context.Context, arg1 string, arg2 db.Author) (int64, error) {
+func (m *MockDBStore) UpdateAuthorByID(arg0 context.Context, arg1 string, arg2 db.AuthorUpdate) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAuthorByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)

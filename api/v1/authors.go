@@ -81,7 +81,7 @@ func (server *Server) createAuthor(ctx *gin.Context) {
 // getAuthorByID
 //
 // @Summary			Get one author by ID
-// @Description	One author, which matches the ID is returned
+// @Description	One author, which matches the ID, is returned
 // @ID					authors-get-author-by-id
 // @Tags				authors
 // @Accept			json
@@ -112,4 +112,81 @@ func (server *Server) getAuthorByID(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, author)
+}
+
+// patchAuthorByID
+//
+// @Summary			Patch one author by ID
+// @Description	One author, which matches the ID, is modified with the provided patch
+// @ID					authors-patch-author-by-id
+// @Tags				authors
+// @Accept			json
+// @Produce			json
+// @Param				id							path 				int									true	"ID of the desired author to patch"
+// @Param				data						body 				AuthorUpdate				true	"Patch for modifying the author"
+// @Success			200
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure			404							{object}		ErrorNotFound							"Not Found"
+// @Router			/authors/{id}		[patch]
+func (server *Server) patchAuthorByID(ctx *gin.Context) {
+	var uriParam getByIDRequest
+	if err := ctx.ShouldBindUri(&uriParam); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	var authorPatch db.AuthorUpdate
+	if err := ctx.ShouldBindJSON(&authorPatch); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	modifiedCount, err := server.store.UpdateAuthorByID(ctx, uriParam.ID, authorPatch)
+	if err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	if modifiedCount < 1 {
+		NewErrorNotFound(err).Send(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
+// deleteAuthorByID
+//
+// @Summary			Delete one author by ID
+// @Description	One author, which matches the ID, is deleted
+// @ID					authors-delete-author-by-id
+// @Tags				authors
+// @Accept			json
+// @Produce			json
+// @Param				id							path 				int									true	"ID of the desired author to patch"
+// @Success			200
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure			404							{object}		ErrorNotFound							"Not Found"
+// @Router			/authors/{id}		[delete]
+func (server *Server) deleteAuthorByID(ctx *gin.Context) {
+	var uriParam getByIDRequest
+	if err := ctx.ShouldBindUri(&uriParam); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	deleteCount, err := server.store.DeleteAuthorByID(ctx, uriParam.ID)
+	if err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	if deleteCount < 1 {
+		NewErrorNotFound(err).Send(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
 }

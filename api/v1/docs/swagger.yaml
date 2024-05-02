@@ -326,6 +326,10 @@ paths:
       description: All authors are listed in a paginated manner
       operationId: authors-list-authors
       parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
       - description: Offset for the pagination
         in: query
         name: page_id
@@ -366,6 +370,10 @@ paths:
       description: Creates a new author
       operationId: authors-create-author
       parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
       - description: Data for the author to create
         in: body
         name: data
@@ -401,6 +409,10 @@ paths:
       description: One author, which matches the ID, is deleted
       operationId: authors-delete-author-by-id
       parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
       - description: ID of the desired author to patch
         in: path
         name: id
@@ -432,6 +444,10 @@ paths:
       description: One author, which matches the ID, is returned
       operationId: authors-get-author-by-id
       parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
       - description: ID of the desired author
         in: path
         name: id
@@ -470,6 +486,10 @@ paths:
         patch
       operationId: authors-patch-author-by-id
       parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
       - description: ID of the desired author to patch
         in: path
         name: id

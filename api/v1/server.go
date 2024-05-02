@@ -5,6 +5,7 @@ import (
 
 	"github.com/PfMartin/wegonice-api/db"
 	"github.com/PfMartin/wegonice-api/token"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
@@ -23,9 +24,18 @@ type ServerConfig struct {
 	basePath             string
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
+	corsAllowedOrigins   []string
 }
 
-func NewServer(store db.DBStore, url string, basePath string, tokenSymmetricKey string, accessTokenDuration time.Duration, refreshTokenDuration time.Duration) *Server {
+func NewServer(
+	store db.DBStore,
+	url string,
+	basePath string,
+	tokenSymmetricKey string,
+	accessTokenDuration time.Duration,
+	refreshTokenDuration time.Duration,
+	corsAllowedOrigins []string,
+) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
 		log.Err(err).Msg("cannot create token maker")
@@ -37,6 +47,7 @@ func NewServer(store db.DBStore, url string, basePath string, tokenSymmetricKey 
 		basePath:             basePath,
 		accessTokenDuration:  accessTokenDuration,
 		refreshTokenDuration: refreshTokenDuration,
+		corsAllowedOrigins:   corsAllowedOrigins,
 	}
 
 	server := &Server{
@@ -52,6 +63,10 @@ func NewServer(store db.DBStore, url string, basePath string, tokenSymmetricKey 
 
 func (server *Server) setupRoutes() {
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: server.config.corsAllowedOrigins,
+		AllowMethods: []string{"GET", "POST", "PATCH", "DELETE"},
+	}))
 
 	v1Routes := router.Group(server.config.basePath)
 
@@ -63,6 +78,7 @@ func (server *Server) setupRoutes() {
 	authRoutes.POST("/login", server.loginUser)
 
 	authorRoutes := v1Routes.Group("/authors")
+	authorRoutes.Use(authMiddleware(server.tokenMaker))
 	authorRoutes.GET("", server.listAuthors)
 	authorRoutes.POST("/", server.createAuthor)
 	authorRoutes.GET("/:id", server.getAuthorByID)

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/PfMartin/wegonice-api/db"
 	mock_db "github.com/PfMartin/wegonice-api/db/mock"
@@ -42,6 +43,7 @@ func randomAuthor(t *testing.T) (db.Author, primitive.ObjectID) {
 }
 
 func TestUnitListAuthors(t *testing.T) {
+	user, _ := randomUser(t)
 	var authors []db.Author
 	for i := 0; i < 10; i++ {
 		author, _ := randomAuthor(t)
@@ -150,6 +152,8 @@ func TestUnitListAuthors(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -157,6 +161,7 @@ func TestUnitListAuthors(t *testing.T) {
 }
 
 func TestUnitGetAuthorByID(t *testing.T) {
+	user, _ := randomUser(t)
 	var authors []db.Author
 	for i := 0; i < 2; i++ {
 		author, _ := randomAuthor(t)
@@ -222,6 +227,8 @@ func TestUnitGetAuthorByID(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -229,6 +236,7 @@ func TestUnitGetAuthorByID(t *testing.T) {
 }
 
 func TestUnitCreateAuthor(t *testing.T) {
+	user, _ := randomUser(t)
 	author, primitiveID := randomAuthor(t)
 
 	testCases := []struct {
@@ -336,6 +344,8 @@ func TestUnitCreateAuthor(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -343,6 +353,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 }
 
 func TestUnitPatchAuthorByID(t *testing.T) {
+	user, _ := randomUser(t)
 	author, _ := randomAuthor(t)
 	nonMatchingID := primitive.NewObjectID().Hex()
 
@@ -476,6 +487,8 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -483,6 +496,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 }
 
 func TestUnitDeleteAuthorByID(t *testing.T) {
+	user, _ := randomUser(t)
 	author, _ := randomAuthor(t)
 
 	testCases := []struct {
@@ -538,6 +552,8 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 
 			request, err := http.NewRequest(http.MethodDelete, url, nil)
 			require.NoError(t, err)
+
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
 
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)

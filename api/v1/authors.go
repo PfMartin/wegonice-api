@@ -17,13 +17,14 @@ import (
 // @Tags				authors
 // @Accept			json
 // @Produce			json
-// @Param				page_id			query 			int									true	"Offset for the pagination"
-// @Param				page_size		query 			int									true	"Number of elements in one page"
-// @Success			200					{array}			AuthorResponse						"List of authors matching the given pagination parameters"
-// @Failure			400					{object}		ErrorBadRequest						"Bad Request"
-// @Failure			401					{object}		ErrorUnauthorized					"Unauthorized"
-// @Failure 		500					{object}		ErrorInternalServerError	"Internal Server Error"
-// @Router			/authors		[get]
+// @Param				authorization	header			string							false	"Authorization header for bearer token"
+// @Param				page_id				query 			int									true	"Offset for the pagination"
+// @Param				page_size			query 			int									true	"Number of elements in one page"
+// @Success			200						{array}			AuthorResponse						"List of authors matching the given pagination parameters"
+// @Failure			400						{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401						{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure 		500						{object}		ErrorInternalServerError	"Internal Server Error"
+// @Router			/authors			[get]
 func (server *Server) listAuthors(ctx *gin.Context) {
 	var pagination db.Pagination
 	if err := ctx.ShouldBindQuery(&pagination); err != nil {
@@ -50,6 +51,7 @@ func (server *Server) listAuthors(ctx *gin.Context) {
 // @Tags				authors
 // @Accept			json
 // @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
 // @Param				data						body 				AuthorToCreate			true	"Data for the author to create"
 // @Success			201							string			string										"ID of the created author"
 // @Failure			400							{object}		ErrorBadRequest						"Bad Request"
@@ -86,6 +88,7 @@ func (server *Server) createAuthor(ctx *gin.Context) {
 // @Tags				authors
 // @Accept			json
 // @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
 // @Param				id							path 				int									true	"ID of the desired author"
 // @Success			200							{object}		AuthorResponse						"Author that matches the ID"
 // @Failure			400							{object}		ErrorBadRequest						"Bad Request"
@@ -122,6 +125,7 @@ func (server *Server) getAuthorByID(ctx *gin.Context) {
 // @Tags				authors
 // @Accept			json
 // @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
 // @Param				id							path 				int									true	"ID of the desired author to patch"
 // @Param				data						body 				AuthorUpdate				true	"Patch for modifying the author"
 // @Success			200
@@ -169,6 +173,7 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 // @Tags				authors
 // @Accept			json
 // @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
 // @Param				id							path 				int									true	"ID of the desired author to patch"
 // @Success			200
 // @Failure			400							{object}		ErrorBadRequest						"Bad Request"

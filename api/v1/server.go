@@ -62,6 +62,13 @@ func (server *Server) setupRoutes() {
 	authRoutes.POST("/register", server.registerUser)
 	authRoutes.POST("/login", server.loginUser)
 
+	authorRoutes := v1Routes.Group("/authors")
+	authorRoutes.GET("", server.listAuthors)
+	authorRoutes.POST("/", server.createAuthor)
+	authorRoutes.GET("/:id", server.getAuthorByID)
+	authorRoutes.PATCH("/:id", server.patchAuthorByID)
+	authorRoutes.DELETE("/:id", server.deleteAuthorByID)
+
 	server.router = router
 }
 

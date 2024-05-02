@@ -6,8 +6,8 @@ import (
 )
 
 type Pagination struct {
-	PageID   int64 `form:"page_id" json:"page_id" binding:"min=1"`
-	PageSize int64 `form:"page_id" json:"page_size" binding:"min=0,max=500"`
+	PageID   int64 `form:"page_id" json:"page_id" binding:"required,min=1"`
+	PageSize int64 `form:"page_size" json:"page_size" binding:"required,min=0,max=500"`
 }
 
 func (pagination *Pagination) getFindOptions() *options.FindOptions {
@@ -69,7 +69,28 @@ type Author struct {
 	UserCreated  User   `bson:"userCreated" json:"userCreated"`
 	CreatedAt    int64  `bson:"createdAt" json:"createdAt"`
 	ModifiedAt   int64  `bson:"modifiedAt" json:"modifiedAt"`
-}
+} // @name Author
+
+type AuthorToCreate struct {
+	FirstName    string `bson:"firstName" json:"firstName,omitempty" example:"Moe"`
+	LastName     string `bson:"lastName" json:"lastName,omitempty" example:"Zarella"`
+	Name         string `bson:"name" json:"name" binding:"required" example:"Moe Zarella"`
+	WebsiteURL   string `bson:"websiteUrl" json:"websiteUrl,omitempty" example:"https://www.moezarella.com"`
+	InstagramURL string `bson:"instagramUrl" json:"instagramUrl,omitempty" example:"https://wwww.instagram.com/moezarella/"`
+	YoutubeURL   string `bson:"youtubeUrl" json:"youtubeUrl,omitempty" example:"https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA"`
+	ImageName    string `bson:"imageName" json:"imageName,omitempty" example:"moezarella.png"`
+	UserID       string `bson:"userId" json:"userId" binding:"required" example:"660c4b99bc1bc4aabe3e6cd1"`
+} // @name AuthorToCreate
+
+type AuthorUpdate struct {
+	FirstName    string `bson:"firstName" json:"firstName,omitempty" example:"Moe"`
+	LastName     string `bson:"lastName" json:"lastName,omitempty" example:"Zarella"`
+	Name         string `bson:"name" json:"name" example:"Moe Zarella"`
+	WebsiteURL   string `bson:"websiteUrl" json:"websiteUrl,omitempty" example:"https://www.moezarella.com"`
+	InstagramURL string `bson:"instagramUrl" json:"instagramUrl,omitempty" example:"https://wwww.instagram.com/moezarella/"`
+	YoutubeURL   string `bson:"youtubeUrl" json:"youtubeUrl,omitempty" example:"https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA"`
+	ImageName    string `bson:"imageName" json:"imageName,omitempty" example:"moezarella.png"`
+} // @name AuthorUpdate
 
 type Category string
 

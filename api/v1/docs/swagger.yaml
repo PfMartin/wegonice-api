@@ -1,5 +1,102 @@
 basePath: /api/v1
 definitions:
+  AuthorResponse:
+    properties:
+      createdAt:
+        example: 1714462120
+        type: integer
+      firstName:
+        example: Moe
+        type: string
+      id:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      imageName:
+        example: moezarella.png
+        type: string
+      instagramUrl:
+        example: https://wwww.instagram.com/moezarella/
+        type: string
+      lastName:
+        example: Zarella
+        type: string
+      modifiedAt:
+        example: 1714462120
+        type: integer
+      name:
+        example: Moe Zarella
+        type: string
+      recipeCount:
+        example: 5
+        type: integer
+      userCreated:
+        $ref: '#/definitions/api.UserResponse'
+      userId:
+        example: 660c4b99bc1bc4aabe3e6cd1
+        type: string
+      websiteUrl:
+        example: https://www.moezarella.com
+        type: string
+      youtubeUrl:
+        example: https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA
+        type: string
+    required:
+    - name
+    type: object
+  AuthorToCreate:
+    properties:
+      firstName:
+        example: Moe
+        type: string
+      imageName:
+        example: moezarella.png
+        type: string
+      instagramUrl:
+        example: https://wwww.instagram.com/moezarella/
+        type: string
+      lastName:
+        example: Zarella
+        type: string
+      name:
+        example: Moe Zarella
+        type: string
+      userId:
+        example: 660c4b99bc1bc4aabe3e6cd1
+        type: string
+      websiteUrl:
+        example: https://www.moezarella.com
+        type: string
+      youtubeUrl:
+        example: https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA
+        type: string
+    required:
+    - name
+    - userId
+    type: object
+  AuthorUpdate:
+    properties:
+      firstName:
+        example: Moe
+        type: string
+      imageName:
+        example: moezarella.png
+        type: string
+      instagramUrl:
+        example: https://wwww.instagram.com/moezarella/
+        type: string
+      lastName:
+        example: Zarella
+        type: string
+      name:
+        example: Moe Zarella
+        type: string
+      websiteUrl:
+        example: https://www.moezarella.com
+        type: string
+      youtubeUrl:
+        example: https://www.youtube.com/channel/UCy8asdgasdf7RcC6OZffZA
+        type: string
+    type: object
   ErrorBadRequest:
     properties:
       message:
@@ -60,6 +157,30 @@ definitions:
         example: Unauthorized
         type: string
     type: object
+  api.UserResponse:
+    properties:
+      createdAt:
+        example: 1714462120
+        type: integer
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 660c4b99bc1bc4aabe3e6cd1
+        type: string
+      isActive:
+        example: true
+        type: boolean
+      modifiedAt:
+        example: 1714462120
+        type: integer
+      role:
+        allOf:
+        - $ref: '#/definitions/db.Role'
+        example: user
+    required:
+    - email
+    type: object
   authUserBody:
     properties:
       email:
@@ -74,6 +195,14 @@ definitions:
     - email
     - password
     type: object
+  db.Role:
+    enum:
+    - user
+    - admin
+    type: string
+    x-enum-varnames:
+    - UserRole
+    - AdminRole
   heartbeatResponse:
     properties:
       status:
@@ -190,6 +319,188 @@ paths:
       summary: Registers a user
       tags:
       - auth
+  /authors:
+    get:
+      consumes:
+      - application/json
+      description: All authors are listed in a paginated manner
+      operationId: authors-list-authors
+      parameters:
+      - description: Offset for the pagination
+        in: query
+        name: page_id
+        required: true
+        type: integer
+      - description: Number of elements in one page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of authors matching the given pagination parameters
+          schema:
+            items:
+              $ref: '#/definitions/AuthorResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: List all authors
+      tags:
+      - authors
+    post:
+      consumes:
+      - application/json
+      description: Creates a new author
+      operationId: authors-create-author
+      parameters:
+      - description: Data for the author to create
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/AuthorToCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ID of the created author
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Create new author
+      tags:
+      - authors
+  /authors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: One author, which matches the ID, is deleted
+      operationId: authors-delete-author-by-id
+      parameters:
+      - description: ID of the desired author to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Delete one author by ID
+      tags:
+      - authors
+    get:
+      consumes:
+      - application/json
+      description: One author, which matches the ID, is returned
+      operationId: authors-get-author-by-id
+      parameters:
+      - description: ID of the desired author
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Author that matches the ID
+          schema:
+            $ref: '#/definitions/AuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Get one author by ID
+      tags:
+      - authors
+    patch:
+      consumes:
+      - application/json
+      description: One author, which matches the ID, is modified with the provided
+        patch
+      operationId: authors-patch-author-by-id
+      parameters:
+      - description: ID of the desired author to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch for modifying the author
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/AuthorUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Patch one author by ID
+      tags:
+      - authors
   /heartbeat:
     get:
       consumes:

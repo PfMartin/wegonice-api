@@ -1,5 +1,5 @@
 #!make
-include .env
+include .env.example
 
 db-start:
 	wegonice-db start

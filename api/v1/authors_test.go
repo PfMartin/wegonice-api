@@ -342,6 +342,125 @@ func TestUnitCreateAuthor(t *testing.T) {
 	}
 }
 
+func TestUnitPatchAuthorByID(t *testing.T) {
+	author, primitiveID := randomAuthor(t)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success creating a new author",
+			body: gin.H{
+				"name":      author.Name,
+				"firstName": author.FirstName,
+				"lastName":  author.LastName,
+				"userId":    author.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
+					Name:      author.Name,
+					FirstName: author.FirstName,
+					LastName:  author.LastName,
+					UserID:    author.UserID,
+				}).Times(1).Return(primitiveID, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := "/api/v1/authors/"
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
+func TestUnitDeleteAuthorByID(t *testing.T) {
+	author, _ := randomAuthor(t)
+
+	testCases := []struct {
+		name          string
+		id            string
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success deleting the author",
+			id:   author.ID,
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteAuthorByID(gomock.Any(), author.ID).Times(1).Return(int64(1), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing id",
+			id:   "",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteAuthorByID(gomock.Any(), "").Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due author id not matching an authors in the database",
+			id:   "not-existing",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteAuthorByID(gomock.Any(), "not-existing").Times(1).Return(int64(0), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/api/v1/authors/%s", tc.id)
+
+			request, err := http.NewRequest(http.MethodDelete, url, nil)
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func requireAuthorComparison(t *testing.T, expectedAuthor db.Author, gotAuthor AuthorResponse) {
 	require.Equal(t, expectedAuthor.ID, gotAuthor.ID)
 	require.Equal(t, expectedAuthor.FirstName, gotAuthor.FirstName)

@@ -148,6 +148,12 @@ const docTemplate = `{
                 "operationId": "authors-list-authors",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
                         "type": "integer",
                         "description": "Offset for the pagination",
                         "name": "page_id",
@@ -207,6 +213,12 @@ const docTemplate = `{
                 "operationId": "authors-create-author",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
                         "description": "Data for the author to create",
                         "name": "data",
                         "in": "body",
@@ -259,6 +271,12 @@ const docTemplate = `{
                 "summary": "Get one author by ID",
                 "operationId": "authors-get-author-by-id",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
                     {
                         "type": "integer",
                         "description": "ID of the desired author",
@@ -315,6 +333,12 @@ const docTemplate = `{
                 "operationId": "authors-delete-author-by-id",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
                         "type": "integer",
                         "description": "ID of the desired author to patch",
                         "name": "id",
@@ -360,6 +384,12 @@ const docTemplate = `{
                 "summary": "Patch one author by ID",
                 "operationId": "authors-patch-author-by-id",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
                     {
                         "type": "integer",
                         "description": "ID of the desired author to patch",

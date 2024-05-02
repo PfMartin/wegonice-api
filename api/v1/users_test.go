@@ -143,8 +143,6 @@ func TestUnitRegisterUser(t *testing.T) {
 
 func TestUnitLoginUser(t *testing.T) {
 	user, password := randomUser(t)
-	// userID, err := primitive.ObjectIDFromHex(user.ID)
-	// require.NoError(t, err)
 
 	sessionID := primitive.NewObjectID()
 
@@ -165,7 +163,7 @@ func TestUnitLoginUser(t *testing.T) {
 				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(1).Return(sessionID, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusAccepted, recorder.Code)
+				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
 		{

@@ -120,5 +120,5 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		UserEmail:             user.ID,
 	}
 
-	ctx.JSON(http.StatusAccepted, res)
+	ctx.JSON(http.StatusOK, res)
 }

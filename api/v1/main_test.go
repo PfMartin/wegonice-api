@@ -29,7 +29,15 @@ func newTestServer(t *testing.T, store db.DBStore) *Server {
 		CorsAllowedOrigins:   []string{"http://*", "https://*"},
 	}
 
-	server := NewServer(store, config.APIURL, config.APIBasePath, config.TokenSymmetricKey, config.AccessTokenDuration, config.RefreshTokenDuration, config.CorsAllowedOrigins)
+	server := NewServer(
+		store,
+		config.APIURL,
+		config.APIBasePath,
+		config.TokenSymmetricKey,
+		config.AccessTokenDuration,
+		config.RefreshTokenDuration,
+		config.CorsAllowedOrigins,
+	)
 
 	return server
 }

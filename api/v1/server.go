@@ -78,6 +78,7 @@ func (server *Server) setupRoutes() {
 	authRoutes.POST("/login", server.loginUser)
 
 	authorRoutes := v1Routes.Group("/authors")
+	authorRoutes.Use(authMiddleware(server.tokenMaker))
 	authorRoutes.GET("", server.listAuthors)
 	authorRoutes.POST("/", server.createAuthor)
 	authorRoutes.GET("/:id", server.getAuthorByID)

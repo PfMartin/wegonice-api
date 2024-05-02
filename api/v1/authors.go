@@ -142,6 +142,11 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 		return
 	}
 
+	if (authorPatch == db.AuthorUpdate{}) {
+		NewErrorBadRequest(fmt.Errorf("missing author patch")).Send(ctx)
+		return
+	}
+
 	modifiedCount, err := server.store.UpdateAuthorByID(ctx, uriParam.ID, authorPatch)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
@@ -149,7 +154,7 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 	}
 
 	if modifiedCount < 1 {
-		NewErrorNotFound(err).Send(ctx)
+		NewErrorNotFound(fmt.Errorf("could not find author with ID: %s", uriParam.ID)).Send(ctx)
 		return
 	}
 

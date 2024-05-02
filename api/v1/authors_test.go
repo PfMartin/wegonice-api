@@ -343,32 +343,116 @@ func TestUnitCreateAuthor(t *testing.T) {
 }
 
 func TestUnitPatchAuthorByID(t *testing.T) {
-	author, primitiveID := randomAuthor(t)
+	author, _ := randomAuthor(t)
+	nonMatchingID := primitive.NewObjectID().Hex()
+
+	fullAuthorPatch := db.AuthorUpdate{
+		Name:         "New author name",
+		FirstName:    "New first name",
+		LastName:     "New last name",
+		WebsiteURL:   "new website url",
+		InstagramURL: "new instagram url",
+		YoutubeURL:   "new youtube url",
+		ImageName:    "new image name",
+	}
 
 	testCases := []struct {
 		name          string
+		id            string
 		body          gin.H
 		buildStubs    func(store *mock_db.MockDBStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "Success creating a new author",
+			name: "Success with full update of the author",
+			id:   author.ID,
 			body: gin.H{
-				"name":      author.Name,
-				"firstName": author.FirstName,
-				"lastName":  author.LastName,
-				"userId":    author.UserID,
+				"name":         fullAuthorPatch.Name,
+				"firstName":    fullAuthorPatch.FirstName,
+				"lastName":     fullAuthorPatch.LastName,
+				"websiteUrl":   fullAuthorPatch.WebsiteURL,
+				"instagramUrl": fullAuthorPatch.InstagramURL,
+				"youtubeUrl":   fullAuthorPatch.YoutubeURL,
+				"imageName":    fullAuthorPatch.ImageName,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
-					Name:      author.Name,
-					FirstName: author.FirstName,
-					LastName:  author.LastName,
-					UserID:    author.UserID,
-				}).Times(1).Return(primitiveID, nil)
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, fullAuthorPatch).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Success with partial update of the author",
+			id:   author.ID,
+			body: gin.H{
+				"name":      fullAuthorPatch.Name,
+				"firstName": fullAuthorPatch.FirstName,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{
+					Name:      fullAuthorPatch.Name,
+					FirstName: fullAuthorPatch.FirstName,
+				}).Times(1).Return(int64(1), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing id",
+			id:   "",
+			body: gin.H{
+				"name": fullAuthorPatch.Name,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{
+					Name: fullAuthorPatch.Name,
+				}).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing body",
+			id:   author.ID,
+			body: gin.H{},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{}).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to the provided author not being valid",
+			id:   "not-valid-id",
+			body: gin.H{
+				"name": fullAuthorPatch.Name,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), "not-valid-id", db.AuthorUpdate{
+					Name: fullAuthorPatch.Name,
+				}).Times(1).Return(int64(0), fmt.Errorf("failed to parse authorID"))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to no matching author for author ID",
+			id:   nonMatchingID,
+			body: gin.H{
+				"name": fullAuthorPatch.Name,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), nonMatchingID, db.AuthorUpdate{
+					Name: fullAuthorPatch.Name,
+				}).Times(1).Return(int64(0), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 	}
@@ -384,12 +468,12 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := "/api/v1/authors/"
+			url := fmt.Sprintf("/api/v1/authors/%s", tc.id)
 
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			request, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)

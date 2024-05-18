@@ -366,6 +366,62 @@ definitions:
         example: 1
         type: integer
     type: object
+  db.AmountUnit:
+    enum:
+    - ml
+    - l
+    - mg
+    - g
+    - tbs
+    - tsp
+    - pc
+    type: string
+    x-enum-varnames:
+    - Milliliters
+    - Liters
+    - Milligrams
+    - Grams
+    - Tablespoon
+    - Teaspoon
+    - Piece
+  db.Category:
+    enum:
+    - breakfast
+    - main
+    - desert
+    - smoothie
+    - baby
+    - drink
+    type: string
+    x-enum-varnames:
+    - Breakfast
+    - Main
+    - Desert
+    - Smoothie
+    - Baby
+    - Drink
+  db.Ingredient:
+    properties:
+      amount:
+        example: 100
+        type: integer
+      name:
+        example: flour
+        type: string
+      unit:
+        allOf:
+        - $ref: '#/definitions/db.AmountUnit'
+        example: g
+    type: object
+  db.PrepStep:
+    properties:
+      description:
+        example: Dice the onions
+        type: string
+      rank:
+        example: 1
+        type: integer
+    type: object
   db.Role:
     enum:
     - user

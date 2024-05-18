@@ -53,7 +53,7 @@ var recipeProjectStage = bson.M{"$project": bson.M{
 },
 }
 
-func (store *MongoDBStore) CreateRecipe(ctx context.Context, recipe Recipe) (primitive.ObjectID, error) {
+func (store *MongoDBStore) CreateRecipe(ctx context.Context, recipe RecipeToCreate) (primitive.ObjectID, error) {
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{"name": 1},
 		Options: options.Index().SetUnique(true),

@@ -142,3 +142,15 @@ type Recipe struct {
 	CreatedAt   int64        `bson:"createdAt" json:"createdAt"`
 	ModifiedAt  int64        `bson:"modifiedAt" json:"modifiedAt"`
 }
+
+type RecipeToCreate struct {
+	Name        string       `bson:"name" json:"name" example:"Pancakes" binding:"required"`
+	ImageName   string       `bson:"imageName" json:"imageName,omitempty" example:"Pancakes.png"`
+	RecipeURL   string       `bson:"recipeUrl" json:"recipeUrl,omitempty" example:"https://www.allthepancakes.com/pancakes"`
+	TimeM       int          `bson:"timeM" json:"timeM" example:"30"`
+	Category    Category     `bson:"category" json:"category" example:"breakfast"`
+	Ingredients []Ingredient `bson:"ingredients" json:"ingredients"`
+	PrepSteps   []PrepStep   `bson:"prepSteps" json:"prepSteps"`
+	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
+	UserID      string       `bson:"userId" json:"userId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
+}

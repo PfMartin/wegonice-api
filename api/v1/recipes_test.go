@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/PfMartin/wegonice-api/db"
 	mock_db "github.com/PfMartin/wegonice-api/db/mock"
 	"github.com/PfMartin/wegonice-api/util"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -292,7 +294,165 @@ func TestUnitGetRecipeByID(t *testing.T) {
 	}
 }
 
+func TestUnitCreateRecipe(t *testing.T) {
+	user, _ := randomUser(t)
+	recipe, primitiveID := randomRecipe(t)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success creating a new recipe",
+			body: gin.H{
+				"name":        recipe.Name,
+				"imageName":   recipe.ImageName,
+				"recipeUrl":   recipe.RecipeURL,
+				"timeM":       recipe.TimeM,
+				"category":    recipe.Category,
+				"ingredients": recipe.Ingredients,
+				"prepSteps":   recipe.PrepSteps,
+				"authorId":    recipe.AuthorID,
+				"userId":      recipe.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateRecipe(gomock.Any(), db.RecipeToCreate{
+					Name:        recipe.Name,
+					ImageName:   recipe.ImageName,
+					RecipeURL:   recipe.RecipeURL,
+					TimeM:       recipe.TimeM,
+					Category:    recipe.Category,
+					Ingredients: recipe.Ingredients,
+					PrepSteps:   recipe.PrepSteps,
+					AuthorID:    recipe.AuthorID,
+					UserID:      recipe.UserID,
+				}).Times(1).Return(primitiveID, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing name",
+			body: gin.H{
+				"imageName":   recipe.ImageName,
+				"recipeUrl":   recipe.RecipeURL,
+				"timeM":       recipe.TimeM,
+				"category":    recipe.Category,
+				"ingredients": recipe.Ingredients,
+				"prepSteps":   recipe.PrepSteps,
+				"authorId":    recipe.AuthorID,
+				"userId":      recipe.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateRecipe(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing userID",
+			body: gin.H{
+				"name":        recipe.Name,
+				"imageName":   recipe.ImageName,
+				"recipeUrl":   recipe.RecipeURL,
+				"timeM":       recipe.TimeM,
+				"category":    recipe.Category,
+				"ingredients": recipe.Ingredients,
+				"prepSteps":   recipe.PrepSteps,
+				"authorId":    recipe.AuthorID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateRecipe(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing authorID",
+			body: gin.H{
+				"name":        recipe.Name,
+				"imageName":   recipe.ImageName,
+				"recipeUrl":   recipe.RecipeURL,
+				"timeM":       recipe.TimeM,
+				"category":    recipe.Category,
+				"ingredients": recipe.Ingredients,
+				"prepSteps":   recipe.PrepSteps,
+				"userId":      recipe.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateRecipe(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to already existing recipe",
+			body: gin.H{
+				"name":        recipe.Name,
+				"imageName":   recipe.ImageName,
+				"recipeUrl":   recipe.RecipeURL,
+				"timeM":       recipe.TimeM,
+				"category":    recipe.Category,
+				"ingredients": recipe.Ingredients,
+				"prepSteps":   recipe.PrepSteps,
+				"authorId":    recipe.AuthorID,
+				"userId":      recipe.UserID,
+			},
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().CreateRecipe(gomock.Any(), db.RecipeToCreate{
+					Name:        recipe.Name,
+					ImageName:   recipe.ImageName,
+					RecipeURL:   recipe.RecipeURL,
+					TimeM:       recipe.TimeM,
+					Category:    recipe.Category,
+					Ingredients: recipe.Ingredients,
+					PrepSteps:   recipe.PrepSteps,
+					AuthorID:    recipe.AuthorID,
+					UserID:      recipe.UserID,
+				}).Times(1).Return(primitive.NilObjectID, fmt.Errorf("recipe with name %s already exists", recipe.Name))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := "/api/v1/recipes/"
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func requireRecipeComparison(t *testing.T, expectedRecipe db.Recipe, gotRecipe RecipeResponse) {
+	t.Helper()
+
 	require.Equal(t, expectedRecipe.ID, gotRecipe.ID)
 	require.Equal(t, expectedRecipe.Name, gotRecipe.Name)
 	require.Equal(t, expectedRecipe.ImageName, gotRecipe.ImageName)

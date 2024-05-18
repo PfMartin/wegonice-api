@@ -88,6 +88,7 @@ func (server *Server) setupRoutes() {
 	recipeRoutes := v1Routes.Group("/recipes")
 	recipeRoutes.Use(authMiddleware(server.tokenMaker))
 	recipeRoutes.GET("", server.listRecipes)
+	recipeRoutes.POST("/", server.createRecipe)
 	recipeRoutes.GET("/:id", server.getRecipeByID)
 
 	server.router = router

@@ -74,7 +74,7 @@ func createRandomRecipe(t *testing.T, store *MongoDBStore, userID string, author
 	categoryIdx := util.RandomInt(0, int64(len(categories)-1))
 	category := categories[categoryIdx]
 
-	recipe := Recipe{
+	recipe := RecipeToCreate{
 		Name:        util.RandomString(6),
 		ImageName:   util.RandomString(10),
 		RecipeURL:   util.RandomString(10),
@@ -117,7 +117,19 @@ func TestUnitCreateRecipe(t *testing.T) {
 	t.Run("Creates new recipe and throws an error when the same recipe should be created again", func(t *testing.T) {
 		recipe := createRandomRecipe(t, store, user.ID, author.ID)
 
-		_, err := store.CreateRecipe(context.Background(), recipe)
+		recipeToCreate := RecipeToCreate{
+			Name:        recipe.Name,
+			ImageName:   recipe.ImageName,
+			RecipeURL:   recipe.RecipeURL,
+			TimeM:       recipe.TimeM,
+			Category:    recipe.Category,
+			Ingredients: recipe.Ingredients,
+			PrepSteps:   recipe.PrepSteps,
+			AuthorID:    recipe.AuthorID,
+			UserID:      recipe.UserID,
+		}
+
+		_, err := store.CreateRecipe(context.Background(), recipeToCreate)
 		require.Error(t, err)
 	})
 }

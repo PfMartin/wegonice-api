@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -40,6 +41,43 @@ func (server *Server) listRecipes(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, recipes)
+}
+
+// createRecipe
+//
+// @Summary			Create new recipe
+// @Description	Creates a new recipe
+// @ID					recipes-create-recipe
+// @Tags				recipes
+// @Accept			json
+// @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
+// @Param				data						body 				RecipeToCreate			true	"Data for the recipe to create"
+// @Success			201							string			string										"ID of the created recipe"
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure 		500							{object}		ErrorInternalServerError	"Internal Server Error"
+// @Router			/recipes				[post]
+func (server *Server) createRecipe(ctx *gin.Context) {
+	var recipeBody db.RecipeToCreate
+	if err := ctx.ShouldBindJSON(&recipeBody); err != nil {
+		fmt.Println(err)
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	recipeID, err := server.store.CreateRecipe(ctx, recipeBody)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "recipe with name") { // TODO: Find better way to check error types (enum?)
+			NewErrorBadRequest(err).Send(ctx)
+			return
+		}
+
+		NewErrorInternalServerError(err).Send(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, recipeID)
 }
 
 // getRecipeByID

@@ -572,6 +572,11 @@ func requireAuthorComparison(t *testing.T, expectedAuthor db.Author, gotAuthor A
 	require.Equal(t, expectedAuthor.YoutubeURL, gotAuthor.YoutubeURL)
 	require.Equal(t, expectedAuthor.ImageName, gotAuthor.ImageName)
 	require.Equal(t, expectedAuthor.UserID, gotAuthor.UserID)
-	require.Equal(t, expectedAuthor.UserCreated.ID, gotAuthor.UserCreated.ID)
-	require.Equal(t, expectedAuthor.UserCreated.Email, gotAuthor.UserCreated.Email)
+
+	requireUserComparison(t, expectedAuthor.UserCreated, gotAuthor.UserCreated)
+}
+
+func requireUserComparison(t *testing.T, expectedUser db.User, gotUser UserResponse) {
+	require.Equal(t, expectedUser.ID, gotUser.ID)
+	require.Equal(t, expectedUser.Email, gotUser.Email)
 }

@@ -55,3 +55,20 @@ type AuthorResponse struct {
 	CreatedAt    int64        `bson:"createdAt" json:"createdAt" example:"1714462120"`
 	ModifiedAt   int64        `bson:"modifiedAt" json:"modifiedAt" example:"1714462120"`
 } // @name AuthorResponse
+
+type RecipeResponse struct {
+	ID          string          `bson:"_id" json:"id" example:"660c4b99bc1bc4aabe126cd1"`
+	Name        string          `bson:"name" json:"name" example:"Pancakes"`
+	ImageName   string          `bson:"imageName" json:"imageName,omitempty" example:"Pancakes.png"`
+	RecipeURL   string          `bson:"recipeUrl" json:"recipeUrl,omitempty" example:"https://www.allthepancakes.com/pancakes"`
+	TimeM       int             `bson:"timeM" json:"timeM" example:"30"`
+	Category    db.Category     `bson:"category" json:"category" example:"breakfast"`
+	Ingredients []db.Ingredient `bson:"ingredients" json:"ingredients"`
+	PrepSteps   []db.PrepStep   `bson:"prepSteps" json:"prepSteps"`
+	AuthorID    string          `bson:"authorId" json:"authorId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
+	Author      AuthorResponse  `bson:"author" json:"author"`
+	UserID      string          `bson:"userId" json:"userId,omitempty" example:"660c4b99bc1bc4aabe126cd1"`
+	UserCreated UserResponse    `bson:"userCreated" json:"userCreated"`
+	CreatedAt   int64           `bson:"createdAt" json:"createdAt" example:"1714462120"`
+	ModifiedAt  int64           `bson:"modifiedAt" json:"modifiedAt" example:"1714462120"`
+}

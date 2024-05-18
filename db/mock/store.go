@@ -52,7 +52,7 @@ func (mr *MockDBStoreMockRecorder) CreateAuthor(arg0, arg1 interface{}) *gomock.
 }
 
 // CreateRecipe mocks base method.
-func (m *MockDBStore) CreateRecipe(arg0 context.Context, arg1 db.Recipe) (primitive.ObjectID, error) {
+func (m *MockDBStore) CreateRecipe(arg0 context.Context, arg1 db.RecipeToCreate) (primitive.ObjectID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateRecipe", arg0, arg1)
 	ret0, _ := ret[0].(primitive.ObjectID)
@@ -277,7 +277,7 @@ func (mr *MockDBStoreMockRecorder) UpdateAuthorByID(arg0, arg1, arg2 interface{}
 }
 
 // UpdateRecipeByID mocks base method.
-func (m *MockDBStore) UpdateRecipeByID(arg0 context.Context, arg1 string, arg2 db.Recipe) (int64, error) {
+func (m *MockDBStore) UpdateRecipeByID(arg0 context.Context, arg1 string, arg2 db.RecipeUpdate) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateRecipeByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)

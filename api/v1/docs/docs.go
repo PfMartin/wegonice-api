@@ -454,6 +454,306 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/recipes": {
+            "get": {
+                "description": "All recipes are listed in a paginated manner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "List all recipes",
+                "operationId": "recipes-list-recipes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for the pagination",
+                        "name": "page_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of elements in one page",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of recipes matching the given pagination parameters",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.RecipeResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new recipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Create new recipe",
+                "operationId": "recipes-create-recipe",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Data for the recipe to create",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RecipeToCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "ID of the created recipe",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipes/{id}": {
+            "get": {
+                "description": "One recipe, which matches the ID, is returned",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Get one recipe by ID",
+                "operationId": "recipes-get-recipe-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired recipe",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recipe that matches the ID",
+                        "schema": {
+                            "$ref": "#/definitions/api.RecipeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "One recipe, which matches the ID, is deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Delete one recipe by ID",
+                "operationId": "recipes-delete-recipe-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired recipe to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "One recipe, which matches the ID, is modified with the provided patch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Patch one recipe by ID",
+                "operationId": "recipes-patch-recipe-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired recipe to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch for modifying the recipe",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RecipeUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -675,6 +975,175 @@ const docTemplate = `{
                 }
             }
         },
+        "RecipeToCreate": {
+            "type": "object",
+            "required": [
+                "authorId",
+                "name",
+                "userId"
+            ],
+            "properties": {
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                }
+            }
+        },
+        "RecipeUpdate": {
+            "type": "object",
+            "properties": {
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
+                }
+            }
+        },
+        "api.RecipeResponse": {
+            "type": "object",
+            "required": [
+                "authorId"
+            ],
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/AuthorResponse"
+                },
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "createdAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "id": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "modifiedAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "userCreated": {
+                    "$ref": "#/definitions/api.UserResponse"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                }
+            }
+        },
         "api.UserResponse": {
             "type": "object",
             "required": [
@@ -727,6 +1196,80 @@ const docTemplate = `{
                     "type": "string",
                     "minLength": 6,
                     "example": "s3cr3tP@ssw0rd"
+                }
+            }
+        },
+        "db.AmountUnit": {
+            "type": "string",
+            "enum": [
+                "ml",
+                "l",
+                "mg",
+                "g",
+                "tbs",
+                "tsp",
+                "pc"
+            ],
+            "x-enum-varnames": [
+                "Milliliters",
+                "Liters",
+                "Milligrams",
+                "Grams",
+                "Tablespoon",
+                "Teaspoon",
+                "Piece"
+            ]
+        },
+        "db.Category": {
+            "type": "string",
+            "enum": [
+                "breakfast",
+                "main",
+                "desert",
+                "smoothie",
+                "baby",
+                "drink"
+            ],
+            "x-enum-varnames": [
+                "Breakfast",
+                "Main",
+                "Desert",
+                "Smoothie",
+                "Baby",
+                "Drink"
+            ]
+        },
+        "db.Ingredient": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "name": {
+                    "type": "string",
+                    "example": "flour"
+                },
+                "unit": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.AmountUnit"
+                        }
+                    ],
+                    "example": "g"
+                }
+            }
+        },
+        "db.PrepStep": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Dice the onions"
+                },
+                "rank": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },

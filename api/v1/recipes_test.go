@@ -217,6 +217,81 @@ func TestUnitListRecipes(t *testing.T) {
 	}
 }
 
+func TestUnitGetRecipeByID(t *testing.T) {
+	user, _ := randomUser(t)
+	var recipes []db.Recipe
+	for i := 0; i < 2; i++ {
+		recipe, _ := randomRecipe(t)
+		recipes = append(recipes, recipe)
+	}
+
+	testCases := []struct {
+		name          string
+		id            string
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success getting the second recipe",
+			id:   recipes[1].ID,
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipes[1].ID).Times(1).Return(recipes[1], nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var gotRecipe RecipeResponse
+				err := json.NewDecoder(recorder.Body).Decode(&gotRecipe)
+				require.NoError(t, err)
+
+				requireRecipeComparison(t, recipes[1], gotRecipe)
+			},
+		},
+		{
+			name: "Fail with non-existent ID",
+			id:   "notexisting",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), "notexisting").Times(1).Return(db.Recipe{}, fmt.Errorf("failed to find recipe with recipeID: notexisting"))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "Fail with non-parsable ID",
+			id:   "notexisting",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), "notexisting").Times(1).Return(db.Recipe{}, fmt.Errorf("failed to parse recipeID"))
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/api/v1/recipes/%s", tc.id)
+			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func requireRecipeComparison(t *testing.T, expectedRecipe db.Recipe, gotRecipe RecipeResponse) {
 	require.Equal(t, expectedRecipe.ID, gotRecipe.ID)
 	require.Equal(t, expectedRecipe.Name, gotRecipe.Name)

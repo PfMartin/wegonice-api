@@ -116,14 +116,14 @@ const (
 )
 
 type Ingredient struct {
-	Name   string     `bson:"name" json:"name"`
-	Amount int        `bson:"amount" json:"amount"`
-	Unit   AmountUnit `bson:"unit" json:"unit"`
+	Name   string     `bson:"name" json:"name" example:"flour"`
+	Amount int        `bson:"amount" json:"amount" example:"100"`
+	Unit   AmountUnit `bson:"unit" json:"unit" example:"g"`
 }
 
 type PrepStep struct {
-	Rank        int    `bson:"rank" json:"rank"`
-	Description string `bson:"description" json:"description"`
+	Rank        int    `bson:"rank" json:"rank" example:"1"`
+	Description string `bson:"description" json:"description" example:"Dice the onions"`
 }
 
 type Recipe struct {

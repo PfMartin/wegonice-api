@@ -157,6 +157,53 @@ definitions:
         example: Unauthorized
         type: string
     type: object
+  api.RecipeResponse:
+    properties:
+      author:
+        $ref: '#/definitions/AuthorResponse'
+      authorId:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      category:
+        allOf:
+        - $ref: '#/definitions/db.Category'
+        example: breakfast
+      createdAt:
+        example: 1714462120
+        type: integer
+      id:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      imageName:
+        example: Pancakes.png
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/db.Ingredient'
+        type: array
+      modifiedAt:
+        example: 1714462120
+        type: integer
+      name:
+        example: Pancakes
+        type: string
+      prepSteps:
+        items:
+          $ref: '#/definitions/db.PrepStep'
+        type: array
+      recipeUrl:
+        example: https://www.allthepancakes.com/pancakes
+        type: string
+      timeM:
+        example: 30
+        type: integer
+      userCreated:
+        $ref: '#/definitions/api.UserResponse'
+      userId:
+        type: string
+    required:
+    - authorId
+    type: object
   api.UserResponse:
     properties:
       createdAt:
@@ -194,6 +241,62 @@ definitions:
     required:
     - email
     - password
+    type: object
+  db.AmountUnit:
+    enum:
+    - ml
+    - l
+    - mg
+    - g
+    - tbs
+    - tsp
+    - pc
+    type: string
+    x-enum-varnames:
+    - Milliliters
+    - Liters
+    - Milligrams
+    - Grams
+    - Tablespoon
+    - Teaspoon
+    - Piece
+  db.Category:
+    enum:
+    - breakfast
+    - main
+    - desert
+    - smoothie
+    - baby
+    - drink
+    type: string
+    x-enum-varnames:
+    - Breakfast
+    - Main
+    - Desert
+    - Smoothie
+    - Baby
+    - Drink
+  db.Ingredient:
+    properties:
+      amount:
+        example: 100
+        type: integer
+      name:
+        example: flour
+        type: string
+      unit:
+        allOf:
+        - $ref: '#/definitions/db.AmountUnit'
+        example: g
+    type: object
+  db.PrepStep:
+    properties:
+      description:
+        example: Dice the onions
+        type: string
+      rank:
+        example: 1
+        type: integer
     type: object
   db.Role:
     enum:
@@ -536,6 +639,93 @@ paths:
       summary: Check heartbeat
       tags:
       - heartbeat
+  /recipes:
+    get:
+      consumes:
+      - application/json
+      description: All recipes are listed in a paginated manner
+      operationId: recipes-list-recipes
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: Offset for the pagination
+        in: query
+        name: page_id
+        required: true
+        type: integer
+      - description: Number of elements in one page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of recipes matching the given pagination parameters
+          schema:
+            items:
+              $ref: '#/definitions/api.RecipeResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: List all recipes
+      tags:
+      - recipes
+  /recipes/{id}:
+    get:
+      consumes:
+      - application/json
+      description: One recipe, which matches the ID, is returned
+      operationId: recipes-get-recipe-by-id
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: ID of the desired recipe
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recipe that matches the ID
+          schema:
+            $ref: '#/definitions/api.RecipeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Get one recipe by ID
+      tags:
+      - recipes
 securityDefinitions:
   BasicAuth:
     type: basic

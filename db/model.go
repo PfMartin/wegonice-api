@@ -153,4 +153,4 @@ type RecipeToCreate struct {
 	PrepSteps   []PrepStep   `bson:"prepSteps" json:"prepSteps"`
 	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
 	UserID      string       `bson:"userId" json:"userId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
-}
+} // @name RecipeToCreate

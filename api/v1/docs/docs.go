@@ -520,6 +520,63 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Creates a new recipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Create new recipe",
+                "operationId": "recipes-create-recipe",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Data for the recipe to create",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RecipeToCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "ID of the created recipe",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorInternalServerError"
+                        }
+                    }
+                }
             }
         },
         "/recipes/{id}": {
@@ -805,6 +862,60 @@ const docTemplate = `{
                 }
             }
         },
+        "RecipeToCreate": {
+            "type": "object",
+            "required": [
+                "authorId",
+                "name",
+                "userId"
+            ],
+            "properties": {
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                }
+            }
+        },
         "api.RecipeResponse": {
             "type": "object",
             "required": [
@@ -870,7 +981,8 @@ const docTemplate = `{
                     "$ref": "#/definitions/api.UserResponse"
                 },
                 "userId": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
                 }
             }
         },

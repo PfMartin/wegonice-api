@@ -194,6 +194,36 @@ definitions:
     - name
     - userId
     type: object
+  RecipeUpdate:
+    properties:
+      authorId:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      category:
+        allOf:
+        - $ref: '#/definitions/db.Category'
+        example: breakfast
+      imageName:
+        example: Pancakes.png
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/db.Ingredient'
+        type: array
+      name:
+        example: Pancakes
+        type: string
+      prepSteps:
+        items:
+          $ref: '#/definitions/db.PrepStep'
+        type: array
+      recipeUrl:
+        example: https://www.allthepancakes.com/pancakes
+        type: string
+      timeM:
+        example: 30
+        type: integer
+    type: object
   api.RecipeResponse:
     properties:
       author:
@@ -800,6 +830,48 @@ paths:
           schema:
             $ref: '#/definitions/ErrorInternalServerError'
       summary: Get one recipe by ID
+      tags:
+      - recipes
+    patch:
+      consumes:
+      - application/json
+      description: One recipe, which matches the ID, is modified with the provided
+        patch
+      operationId: recipes-patch-recipe-by-id
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: ID of the desired recipe to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Patch for modifying the recipe
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/RecipeUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Patch one recipe by ID
       tags:
       - recipes
 securityDefinitions:

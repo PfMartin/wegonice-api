@@ -437,7 +437,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			},
 		},
 		{
-			name: "Fail due to the provided author not being valid",
+			name: "Fail due to the provided authorID not being valid",
 			id:   "not-valid-id",
 			body: gin.H{
 				"name": fullAuthorPatch.Name,

@@ -640,6 +640,67 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "description": "One recipe, which matches the ID, is modified with the provided patch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Patch one recipe by ID",
+                "operationId": "recipes-patch-recipe-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired recipe to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patch for modifying the recipe",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RecipeUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    }
+                }
             }
         }
     },
@@ -913,6 +974,51 @@ const docTemplate = `{
                 "userId": {
                     "type": "string",
                     "example": "660c4b99bc1bc4aabe126cd1"
+                }
+            }
+        },
+        "RecipeUpdate": {
+            "type": "object",
+            "properties": {
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
                 }
             }
         },

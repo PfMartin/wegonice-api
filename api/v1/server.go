@@ -90,6 +90,7 @@ func (server *Server) setupRoutes() {
 	recipeRoutes.GET("", server.listRecipes)
 	recipeRoutes.POST("/", server.createRecipe)
 	recipeRoutes.GET("/:id", server.getRecipeByID)
+	recipeRoutes.PATCH("/:id", server.patchRecipeByID)
 
 	server.router = router
 }

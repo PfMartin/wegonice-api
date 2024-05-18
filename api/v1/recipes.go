@@ -116,3 +116,58 @@ func (server *Server) getRecipeByID(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, recipe)
 }
+
+// patchRecipeByID
+//
+// @Summary			Patch one recipe by ID
+// @Description	One recipe, which matches the ID, is modified with the provided patch
+// @ID					recipes-patch-recipe-by-id
+// @Tags				recipes
+// @Accept			json
+// @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
+// @Param				id							path 				int									true	"ID of the desired recipe to patch"
+// @Param				data						body 				RecipeUpdate				true	"Patch for modifying the recipe"
+// @Success			200
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure			404							{object}		ErrorNotFound							"Not Found"
+// @Router			/recipes/{id}		[patch]
+func (server *Server) patchRecipeByID(ctx *gin.Context) {
+	var uriParam getByIDRequest
+	if err := ctx.ShouldBindUri(&uriParam); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	var recipePatch db.RecipeUpdate
+	if err := ctx.ShouldBindJSON(&recipePatch); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	if recipePatch.Name == "" &&
+		recipePatch.ImageName == "" &&
+		recipePatch.RecipeURL == "" &&
+		recipePatch.TimeM == 0 &&
+		recipePatch.Category == "" &&
+		len(recipePatch.Ingredients) == 0 &&
+		len(recipePatch.PrepSteps) == 0 &&
+		recipePatch.AuthorID == "" {
+		NewErrorBadRequest(fmt.Errorf("missing recipe patch")).Send(ctx)
+		return
+	}
+
+	modifiedCount, err := server.store.UpdateRecipeByID(ctx, uriParam.ID, recipePatch)
+	if err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	if modifiedCount < 1 {
+		NewErrorNotFound(fmt.Errorf("could not find recipe with ID: %s", uriParam.ID)).Send(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}

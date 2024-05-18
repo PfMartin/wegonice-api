@@ -24,7 +24,7 @@ type DBStore interface {
 	CreateRecipe(ctx context.Context, recipe RecipeToCreate) (primitive.ObjectID, error)
 	GetAllRecipes(ctx context.Context, pagination Pagination) ([]Recipe, error)
 	GetRecipeByID(ctx context.Context, recipeID string) (Recipe, error)
-	UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate Recipe) (int64, error)
+	UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate RecipeUpdate) (int64, error)
 	DeleteRecipeByID(ctx context.Context, recipeID string) (int64, error)
 
 	CreateSession(ctx context.Context, session Session) (primitive.ObjectID, error)

@@ -165,7 +165,7 @@ func (store *MongoDBStore) GetRecipeByID(ctx context.Context, recipeID string) (
 	return recipe, nil
 }
 
-func (store *MongoDBStore) UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate Recipe) (int64, error) {
+func (store *MongoDBStore) UpdateRecipeByID(ctx context.Context, recipeID string, recipeUpdate RecipeUpdate) (int64, error) {
 	primitiveRecipeID, err := primitive.ObjectIDFromHex(recipeID)
 	if err != nil {
 		log.Err(err).Msgf("failed to parse recipeID %s to primitive ObjectID", recipeID)
@@ -202,9 +202,6 @@ func (store *MongoDBStore) UpdateRecipeByID(ctx context.Context, recipeID string
 	}
 	if recipeUpdate.AuthorID != "" {
 		update["$set"].(bson.M)["authorID"] = recipeUpdate.AuthorID
-	}
-	if recipeUpdate.UserID != "" {
-		update["$set"].(bson.M)["userID"] = recipeUpdate.UserID
 	}
 
 	updateResult, err := store.recipeCollection.UpdateOne(ctx, filter, update)

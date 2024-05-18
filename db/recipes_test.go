@@ -261,7 +261,7 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 
 	ingredients, prepSteps := getRandomIngredientsAndPrepSteps(t, 5, 5)
 
-	recipeUpdate := Recipe{
+	recipeUpdate := RecipeUpdate{
 		Name:        util.RandomString(4),
 		ImageName:   util.RandomString(10),
 		RecipeURL:   util.RandomString(8),
@@ -274,7 +274,7 @@ func TestUnitUpdateRecipeByID(t *testing.T) {
 	testCases := []struct {
 		name          string
 		recipeID      string
-		recipeUpdate  Recipe
+		recipeUpdate  RecipeUpdate
 		hasError      bool
 		modifiedCount int64
 	}{

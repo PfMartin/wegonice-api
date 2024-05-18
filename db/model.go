@@ -154,3 +154,14 @@ type RecipeToCreate struct {
 	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
 	UserID      string       `bson:"userId" json:"userId,omitempty" binding:"required" example:"660c4b99bc1bc4aabe126cd1"`
 } // @name RecipeToCreate
+
+type RecipeUpdate struct {
+	Name        string       `bson:"name" json:"name,omitempty" example:"Pancakes"`
+	ImageName   string       `bson:"imageName" json:"imageName,omitempty" example:"Pancakes.png"`
+	RecipeURL   string       `bson:"recipeUrl" json:"recipeUrl,omitempty" example:"https://www.allthepancakes.com/pancakes"`
+	TimeM       int          `bson:"timeM" json:"timeM,omitempty" example:"30"`
+	Category    Category     `bson:"category" json:"category,omitempty" example:"breakfast"`
+	Ingredients []Ingredient `bson:"ingredients" json:"ingredients,omitempty"`
+	PrepSteps   []PrepStep   `bson:"prepSteps" json:"prepSteps,omitempty"`
+	AuthorID    string       `bson:"authorId" json:"authorId,omitempty" example:"660c4b99bc1bc4aabe126cd1"`
+} // @name RecipeUpdate

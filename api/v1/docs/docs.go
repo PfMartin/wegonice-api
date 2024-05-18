@@ -497,7 +497,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/api.RecipeResponse"
+                                "$ref": "#/definitions/RecipeResponse"
                             }
                         }
                     },
@@ -612,7 +612,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Recipe that matches the ID",
                         "schema": {
-                            "$ref": "#/definitions/api.RecipeResponse"
+                            "$ref": "#/definitions/RecipeResponse"
                         }
                     },
                     "400": {
@@ -800,7 +800,7 @@ const docTemplate = `{
                     "example": 5
                 },
                 "userCreated": {
-                    "$ref": "#/definitions/api.UserResponse"
+                    "$ref": "#/definitions/UserResponse"
                 },
                 "userId": {
                     "type": "string",
@@ -975,6 +975,76 @@ const docTemplate = `{
                 }
             }
         },
+        "RecipeResponse": {
+            "type": "object",
+            "required": [
+                "authorId"
+            ],
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/AuthorResponse"
+                },
+                "authorId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "category": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/db.Category"
+                        }
+                    ],
+                    "example": "breakfast"
+                },
+                "createdAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "id": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                },
+                "imageName": {
+                    "type": "string",
+                    "example": "Pancakes.png"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.Ingredient"
+                    }
+                },
+                "modifiedAt": {
+                    "type": "integer",
+                    "example": 1714462120
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Pancakes"
+                },
+                "prepSteps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.PrepStep"
+                    }
+                },
+                "recipeUrl": {
+                    "type": "string",
+                    "example": "https://www.allthepancakes.com/pancakes"
+                },
+                "timeM": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "userCreated": {
+                    "$ref": "#/definitions/UserResponse"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "660c4b99bc1bc4aabe126cd1"
+                }
+            }
+        },
         "RecipeToCreate": {
             "type": "object",
             "required": [
@@ -1074,77 +1144,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.RecipeResponse": {
-            "type": "object",
-            "required": [
-                "authorId"
-            ],
-            "properties": {
-                "author": {
-                    "$ref": "#/definitions/AuthorResponse"
-                },
-                "authorId": {
-                    "type": "string",
-                    "example": "660c4b99bc1bc4aabe126cd1"
-                },
-                "category": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/db.Category"
-                        }
-                    ],
-                    "example": "breakfast"
-                },
-                "createdAt": {
-                    "type": "integer",
-                    "example": 1714462120
-                },
-                "id": {
-                    "type": "string",
-                    "example": "660c4b99bc1bc4aabe126cd1"
-                },
-                "imageName": {
-                    "type": "string",
-                    "example": "Pancakes.png"
-                },
-                "ingredients": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/db.Ingredient"
-                    }
-                },
-                "modifiedAt": {
-                    "type": "integer",
-                    "example": 1714462120
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Pancakes"
-                },
-                "prepSteps": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/db.PrepStep"
-                    }
-                },
-                "recipeUrl": {
-                    "type": "string",
-                    "example": "https://www.allthepancakes.com/pancakes"
-                },
-                "timeM": {
-                    "type": "integer",
-                    "example": 30
-                },
-                "userCreated": {
-                    "$ref": "#/definitions/api.UserResponse"
-                },
-                "userId": {
-                    "type": "string",
-                    "example": "660c4b99bc1bc4aabe126cd1"
-                }
-            }
-        },
-        "api.UserResponse": {
+        "UserResponse": {
             "type": "object",
             "required": [
                 "email"

@@ -27,7 +27,7 @@ type UserResponse struct {
 	IsActive   bool    `bson:"isActive" json:"isActive,omitempty" example:"true"`
 	CreatedAt  int64   `bson:"createdAt" json:"createdAt,omitempty" example:"1714462120"`
 	ModifiedAt int64   `bson:"modifiedAt" json:"modifiedAt,omitempty" example:"1714462120"`
-}
+} // @name UserResponse
 
 type AuthorBody struct {
 	FirstName    string `bson:"firstName" json:"firstName,omitempty"`
@@ -71,4 +71,4 @@ type RecipeResponse struct {
 	UserCreated UserResponse    `bson:"userCreated" json:"userCreated"`
 	CreatedAt   int64           `bson:"createdAt" json:"createdAt" example:"1714462120"`
 	ModifiedAt  int64           `bson:"modifiedAt" json:"modifiedAt" example:"1714462120"`
-}
+} // @name RecipeResponse

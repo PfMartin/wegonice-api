@@ -791,6 +791,41 @@ paths:
       tags:
       - recipes
   /recipes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: One recipe, which matches the ID, is deleted
+      operationId: recipes-delete-recipe-by-id
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: ID of the desired recipe to patch
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorNotFound'
+      summary: Delete one recipe by ID
+      tags:
+      - recipes
     get:
       consumes:
       - application/json

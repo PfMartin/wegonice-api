@@ -171,3 +171,39 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 
 	ctx.Status(http.StatusOK)
 }
+
+// deleteRecipeByID
+//
+// @Summary			Delete one recipe by ID
+// @Description	One recipe, which matches the ID, is deleted
+// @ID					recipes-delete-recipe-by-id
+// @Tags				recipes
+// @Accept			json
+// @Produce			json
+// @Param				authorization		header			string							false	"Authorization header for bearer token"
+// @Param				id							path 				int									true	"ID of the desired recipe to patch"
+// @Success			200
+// @Failure			400							{object}		ErrorBadRequest						"Bad Request"
+// @Failure			401							{object}		ErrorUnauthorized					"Unauthorized"
+// @Failure			404							{object}		ErrorNotFound							"Not Found"
+// @Router			/recipes/{id}		[delete]
+func (server *Server) deleteRecipeByID(ctx *gin.Context) {
+	var uriParam getByIDRequest
+	if err := ctx.ShouldBindUri(&uriParam); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	deleteCount, err := server.store.DeleteRecipeByID(ctx, uriParam.ID)
+	if err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	if deleteCount < 1 {
+		NewErrorNotFound(fmt.Errorf("could not find recipe with recipeId: %s", uriParam.ID)).Send(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}

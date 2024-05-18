@@ -91,6 +91,7 @@ func (server *Server) setupRoutes() {
 	recipeRoutes.POST("/", server.createRecipe)
 	recipeRoutes.GET("/:id", server.getRecipeByID)
 	recipeRoutes.PATCH("/:id", server.patchRecipeByID)
+	recipeRoutes.DELETE("/:id", server.deleteRecipeByID)
 
 	server.router = router
 }

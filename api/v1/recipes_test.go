@@ -593,6 +593,72 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 	}
 }
 
+func TestUnitDeleteRecipeByID(t *testing.T) {
+	user, _ := randomUser(t)
+	recipe, _ := randomRecipe(t)
+
+	testCases := []struct {
+		name          string
+		id            string
+		buildStubs    func(store *mock_db.MockDBStore)
+		checkResponse func(recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "Success deleting the recipe",
+			id:   recipe.ID,
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(int64(1), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to missing id",
+			id:   "",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteRecipeByID(gomock.Any(), "").Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due recipe id not matching an recipes in the database",
+			id:   "not-existing",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().DeleteRecipeByID(gomock.Any(), "not-existing").Times(1).Return(int64(0), nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/api/v1/recipes/%s", tc.id)
+
+			request, err := http.NewRequest(http.MethodDelete, url, nil)
+			require.NoError(t, err)
+
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func requireRecipeComparison(t *testing.T, expectedRecipe db.Recipe, gotRecipe RecipeResponse) {
 	t.Helper()
 

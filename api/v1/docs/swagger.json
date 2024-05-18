@@ -635,6 +635,58 @@
                     }
                 }
             },
+            "delete": {
+                "description": "One recipe, which matches the ID, is deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipes"
+                ],
+                "summary": "Delete one recipe by ID",
+                "operationId": "recipes-delete-recipe-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization header for bearer token",
+                        "name": "authorization",
+                        "in": "header"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID of the desired recipe to patch",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorBadRequest"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorUnauthorized"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorNotFound"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "description": "One recipe, which matches the ID, is modified with the provided patch",
                 "consumes": [

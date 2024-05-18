@@ -139,6 +139,59 @@ func TestUnitListRecipes(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:  "Success with pagination from 5 to 10",
+			query: "?page_id=5&page_size=10",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageID:   5,
+					PageSize: 10,
+				}
+
+				store.EXPECT().GetAllRecipes(gomock.Any(), pagination).Times(1).Return(recipes[4:], nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+
+				var gotRecipes []RecipeResponse
+				err := json.NewDecoder(recorder.Body).Decode(&gotRecipes)
+				require.NoError(t, err)
+
+				require.Equal(t, 6, len(gotRecipes))
+
+				for i, expectedRecipe := range recipes[4:] {
+					requireRecipeComparison(t, expectedRecipe, gotRecipes[i])
+				}
+			},
+		},
+		{
+			name:  "Fail with missing page_size",
+			query: "?page_id=5",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageID: 5,
+				}
+
+				store.EXPECT().GetAllRecipes(gomock.Any(), pagination).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name:  "Fail with missing page_id",
+			query: "?page_size=10",
+			buildStubs: func(store *mock_db.MockDBStore) {
+				pagination := db.Pagination{
+					PageSize: 10,
+				}
+
+				store.EXPECT().GetAllRecipes(gomock.Any(), pagination).Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
 	}
 
 	for _, tc := range testCases {

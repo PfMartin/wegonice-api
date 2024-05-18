@@ -85,6 +85,10 @@ func (server *Server) setupRoutes() {
 	authorRoutes.PATCH("/:id", server.patchAuthorByID)
 	authorRoutes.DELETE("/:id", server.deleteAuthorByID)
 
+	recipeRoutes := v1Routes.Group("/recipes")
+	recipeRoutes.Use(authMiddleware(server.tokenMaker))
+	recipeRoutes.GET("", server.listRecipes)
+
 	server.router = router
 }
 

@@ -10,7 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var allowedFileTypes = []string{"png", "jpg"}
+const createFormFileName string = "image"
+
+var allowedFileTypes = []string{".png", ".jpg"}
 
 // saveImage
 //
@@ -31,7 +33,7 @@ var allowedFileTypes = []string{"png", "jpg"}
 // @Failure 		500						{object}		ErrorInternalServerError	"Internal Server Error"
 // @Router			/images				[post]
 func (s *Server) SaveImage(ctx *gin.Context) {
-	file, err := ctx.FormFile("image")
+	file, err := ctx.FormFile(createFormFileName)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
 		return
@@ -39,11 +41,13 @@ func (s *Server) SaveImage(ctx *gin.Context) {
 
 	extension := filepath.Ext(file.Filename)
 	if !slices.Contains(allowedFileTypes, strings.ToLower(extension)) {
+		fmt.Println(extension)
 		NewErrorBadRequest(fmt.Errorf("file type %s is not supported", extension)).Send(ctx)
 		return
 	}
 
 	destination := fmt.Sprintf("./images/%s", file.Filename)
+	// TODO: Check if file with this name at the path already exists
 
 	if err = ctx.SaveUploadedFile(file, destination); err != nil {
 		NewErrorInternalServerError(err).Send(ctx)

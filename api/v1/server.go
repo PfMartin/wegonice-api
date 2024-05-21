@@ -93,6 +93,12 @@ func (server *Server) setupRoutes() {
 	recipeRoutes.PATCH("/:id", server.patchRecipeByID)
 	recipeRoutes.DELETE("/:id", server.deleteRecipeByID)
 
+	imagesRoutes := v1Routes.Group("/images")
+	imagesRoutes.Use(authMiddleware(server.tokenMaker))
+	imagesRoutes.POST("", server.SaveImage)
+	imagesRoutes.GET("/:imagename", server.GetImage)
+	imagesRoutes.DELETE("/:imagename", server.DeleteImage)
+
 	server.router = router
 }
 

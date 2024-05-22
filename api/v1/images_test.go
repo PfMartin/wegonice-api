@@ -32,11 +32,6 @@ func TestUnitSaveImage(t *testing.T) {
 			filename:     "testImage.jpg",
 			responseCode: http.StatusOK,
 		},
-		{
-			name:         "Fail because image already exists",
-			filename:     "testImage.png",
-			responseCode: http.StatusBadRequest,
-		},
 	}
 
 	for _, tc := range testCases {

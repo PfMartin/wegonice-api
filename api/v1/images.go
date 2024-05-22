@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -48,10 +47,6 @@ func (s *Server) SaveImage(ctx *gin.Context) {
 	}
 
 	destination := fmt.Sprintf("%s/%s", s.config.imagesDepotPath, file.Filename)
-	if _, err := os.Stat(destination); err == nil {
-		NewErrorBadRequest(fmt.Errorf("file already exists")).Send(ctx)
-		return
-	}
 
 	if err = ctx.SaveUploadedFile(file, destination); err != nil {
 		NewErrorInternalServerError(err).Send(ctx)

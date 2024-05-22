@@ -227,14 +227,9 @@ func (server *Server) deleteAuthorByID(ctx *gin.Context) {
 		return
 	}
 
-	deleteCount, err := server.store.DeleteAuthorByID(ctx, uriParam.ID)
+	_, err = server.store.DeleteAuthorByID(ctx, uriParam.ID)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
-		return
-	}
-
-	if deleteCount < 1 {
-		NewErrorNotFound(fmt.Errorf("could not find author with authorId: %s", uriParam.ID)).Send(ctx)
 		return
 	}
 

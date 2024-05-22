@@ -169,6 +169,8 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: Delete previous image
+
 	ctx.Status(http.StatusOK)
 }
 
@@ -193,6 +195,8 @@ func (server *Server) deleteRecipeByID(ctx *gin.Context) {
 		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
+
+	// TODO: Delete image
 
 	deleteCount, err := server.store.DeleteRecipeByID(ctx, uriParam.ID)
 	if err != nil {

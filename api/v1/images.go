@@ -70,26 +70,19 @@ func (s *Server) SaveImage(ctx *gin.Context) {
 // @Failure			400									{object}		ErrorBadRequest						"Bad Request"
 // @Failure			401									{object}		ErrorUnauthorized					"Unauthorized"
 // @Failure 		500									{object}		ErrorInternalServerError	"Internal Server Error"
-// @Router			/images/{imagename}	[get]
+// @Router			/images/{imageName}	[get]
 func (s *Server) GetImage(ctx *gin.Context) {
-	ctx.Status(http.StatusOK)
-}
+	type imageNameURI struct {
+		Name string `uri:"imageName" binding:"required"`
+	}
 
-// deleteImage
-//
-// @Summary			Deletes an image
-// @Description	Deletes an image with the given image name from the file system
-// @ID					images-delete
-// @Tags				images
-// @Accept			json
-// @Produce			json
-// @Param				authorization				header			string							false	"Authorization header for bearer token"
-// @Param				page_size						query 			int									true	"Number of elements in one page"
-// @Success			200									{array}			byte											"Image for the given image name"
-// @Failure			400									{object}		ErrorBadRequest						"Bad Request"
-// @Failure			401									{object}		ErrorUnauthorized					"Unauthorized"
-// @Failure 		500									{object}		ErrorInternalServerError	"Internal Server Error"
-// @Router			/images/{imagename}	[delete]
-func (s *Server) DeleteImage(ctx *gin.Context) {
-	ctx.Status(http.StatusOK)
+	var imageName imageNameURI
+	if err := ctx.ShouldBindUri(&imageName); err != nil {
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	filePath := fmt.Sprintf("%s/%s", s.config.imagesDepotPath, imageName.Name)
+
+	ctx.File(filePath)
 }

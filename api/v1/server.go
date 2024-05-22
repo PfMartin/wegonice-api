@@ -99,8 +99,7 @@ func (server *Server) setupRoutes() {
 	imagesRoutes := v1Routes.Group("/images")
 	imagesRoutes.Use(authMiddleware(server.tokenMaker))
 	imagesRoutes.POST("", server.SaveImage)
-	imagesRoutes.GET("/:imagename", server.GetImage)
-	imagesRoutes.DELETE("/:imagename", server.DeleteImage)
+	imagesRoutes.GET("/:imageName", server.GetImage)
 
 	server.router = router
 }

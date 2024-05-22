@@ -76,3 +76,50 @@ func TestUnitSaveImage(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitServeImage(t *testing.T) {
+	testCases := []struct {
+		name         string
+		imageName    string
+		responseCode int
+	}{
+		{
+			name:         "Success with .png image",
+			imageName:    "testImage.png",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "Success with .jpg image",
+			imageName:    "testImage.jpg",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "Fail with non-existing image",
+			imageName:    "non-existing.jpg",
+			responseCode: http.StatusNotFound,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mock_db.NewMockDBStore(ctrl)
+
+			server := newTestServer(t, store)
+
+			recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/api/v1/images/%s", tc.imageName)
+			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			user, _ := randomUser(t)
+			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
+
+			server.router.ServeHTTP(recorder, request)
+			require.Equal(t, tc.responseCode, recorder.Code)
+		})
+	}
+}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -17,12 +18,24 @@ import (
 
 func TestUnitSaveImage(t *testing.T) {
 	testCases := []struct {
-		name     string
-		filename string
+		name         string
+		filename     string
+		responseCode int
 	}{
 		{
-			name:     "Success",
-			filename: "testImage.png",
+			name:         "Success with .png file",
+			filename:     "testImage.png",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "Success with .jpg file",
+			filename:     "testImage.jpg",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "Fail because image already exists",
+			filename:     "testImage.png",
+			responseCode: http.StatusBadRequest,
 		},
 	}
 
@@ -32,7 +45,9 @@ func TestUnitSaveImage(t *testing.T) {
 
 			w := multipart.NewWriter(&buf)
 
-			file, err := os.Open(tc.filename)
+			testImagePath := fmt.Sprintf("./testImages/%s", tc.filename)
+
+			file, err := os.Open(testImagePath)
 			require.NoError(t, err)
 			defer file.Close()
 
@@ -62,7 +77,7 @@ func TestUnitSaveImage(t *testing.T) {
 			addAuthorization(t, request, server.tokenMaker, authorizationTypeBearer, user.Email, time.Minute)
 
 			server.router.ServeHTTP(recorder, request)
-			require.Equal(t, http.StatusOK, recorder.Code)
+			require.Equal(t, tc.responseCode, recorder.Code)
 		})
 	}
 }

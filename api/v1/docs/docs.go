@@ -509,7 +509,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/images/{imagename}": {
+        "/images/{imageName}": {
             "get": {
                 "description": "Gets an image with the given image name from the file system",
                 "consumes": [
@@ -523,64 +523,6 @@ const docTemplate = `{
                 ],
                 "summary": "Gets an image",
                 "operationId": "images-get",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization header for bearer token",
-                        "name": "authorization",
-                        "in": "header"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of elements in one page",
-                        "name": "page_size",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Image for the given image name",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorBadRequest"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorUnauthorized"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorInternalServerError"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Deletes an image with the given image name from the file system",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "images"
-                ],
-                "summary": "Deletes an image",
-                "operationId": "images-delete",
                 "parameters": [
                     {
                         "type": "string",

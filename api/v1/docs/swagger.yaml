@@ -747,46 +747,7 @@ paths:
       summary: Saves an image
       tags:
       - images
-  /images/{imagename}:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes an image with the given image name from the file system
-      operationId: images-delete
-      parameters:
-      - description: Authorization header for bearer token
-        in: header
-        name: authorization
-        type: string
-      - description: Number of elements in one page
-        in: query
-        name: page_size
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Image for the given image name
-          schema:
-            items:
-              type: integer
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorBadRequest'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorUnauthorized'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorInternalServerError'
-      summary: Deletes an image
-      tags:
-      - images
+  /images/{imageName}:
     get:
       consumes:
       - application/json

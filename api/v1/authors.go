@@ -3,10 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/PfMartin/wegonice-api/db"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // listAuthors
@@ -146,8 +148,29 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 		return
 	}
 
+	if authorPatch.FirstName == "" &&
+		authorPatch.LastName == "" &&
+		authorPatch.Name == "" &&
+		authorPatch.WebsiteURL == "" &&
+		authorPatch.InstagramURL == "" &&
+		authorPatch.ImageName == "" {
+		NewErrorBadRequest(fmt.Errorf("missing author patch")).Send(ctx)
+		return
+	}
+
 	if (authorPatch == db.AuthorUpdate{}) {
 		NewErrorBadRequest(fmt.Errorf("missing author patch")).Send(ctx)
+		return
+	}
+
+	existingAuthor, err := server.store.GetAuthorByID(ctx, uriParam.ID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to find author") {
+			NewErrorNotFound(err).Send(ctx)
+			return
+		}
+
+		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
 
@@ -162,7 +185,11 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Delete image
+	previousImagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingAuthor.ImageName)
+
+	if err = os.Remove(previousImagePath); err != nil {
+		log.Err(err).Msgf("failed to delete image in path: %s", previousImagePath)
+	}
 
 	ctx.Status(http.StatusOK)
 }
@@ -189,17 +216,27 @@ func (server *Server) deleteAuthorByID(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Delete image
+	existingAuthor, err := server.store.GetAuthorByID(ctx, uriParam.ID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to find author") {
+			NewErrorNotFound(err).Send(ctx)
+			return
+		}
 
-	deleteCount, err := server.store.DeleteAuthorByID(ctx, uriParam.ID)
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	_, err = server.store.DeleteAuthorByID(ctx, uriParam.ID)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
 
-	if deleteCount < 1 {
-		NewErrorNotFound(fmt.Errorf("could not find author with authorId: %s", uriParam.ID)).Send(ctx)
-		return
+	imagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingAuthor.ImageName)
+
+	if err = os.Remove(imagePath); err != nil {
+		log.Err(err).Msgf("failed to delete image in path: %s", imagePath)
 	}
 
 	ctx.Status(http.StatusOK)

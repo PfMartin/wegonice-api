@@ -489,6 +489,7 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 				"authorId":    fullRecipePatch.AuthorID,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(recipe, nil)
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), recipe.ID, fullRecipePatch).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -502,6 +503,7 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 				"name": fullRecipePatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(recipe, nil)
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), recipe.ID, db.RecipeUpdate{
 					Name: fullRecipePatch.Name,
 				}).Times(1).Return(int64(1), nil)
@@ -517,6 +519,7 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 				"name": fullRecipePatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(0)
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), recipe.ID, gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -528,6 +531,7 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 			id:   recipe.ID,
 			body: gin.H{},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(0)
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), recipe.ID, gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -541,9 +545,10 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 				"name": fullRecipePatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), "not-valid-id").Times(1).Return(db.Recipe{}, fmt.Errorf("failed to parse recipeID"))
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), "not-valid-id", db.RecipeUpdate{
 					Name: fullRecipePatch.Name,
-				}).Times(1).Return(int64(0), fmt.Errorf("failed to parse recipeID"))
+				}).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -556,9 +561,10 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 				"name": fullRecipePatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), nonMatchingID).Times(1).Return(db.Recipe{}, fmt.Errorf("failed to find recipe"))
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), nonMatchingID, db.RecipeUpdate{
 					Name: fullRecipePatch.Name,
-				}).Times(1).Return(int64(0), nil)
+				}).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -596,6 +602,7 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 func TestUnitDeleteRecipeByID(t *testing.T) {
 	user, _ := randomUser(t)
 	recipe, _ := randomRecipe(t)
+	nonMatchingID := primitive.NewObjectID().Hex()
 
 	testCases := []struct {
 		name          string
@@ -607,6 +614,7 @@ func TestUnitDeleteRecipeByID(t *testing.T) {
 			name: "Success deleting the recipe",
 			id:   recipe.ID,
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(recipe, nil)
 				store.EXPECT().DeleteRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -617,6 +625,7 @@ func TestUnitDeleteRecipeByID(t *testing.T) {
 			name: "Fail due to missing id",
 			id:   "",
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), "").Times(0)
 				store.EXPECT().DeleteRecipeByID(gomock.Any(), "").Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -624,10 +633,22 @@ func TestUnitDeleteRecipeByID(t *testing.T) {
 			},
 		},
 		{
-			name: "Fail due recipe id not matching an recipes in the database",
-			id:   "not-existing",
+			name: "Fail due to the provided recipeID not being valid",
+			id:   "not-valid-id",
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().DeleteRecipeByID(gomock.Any(), "not-existing").Times(1).Return(int64(0), nil)
+				store.EXPECT().GetRecipeByID(gomock.Any(), "not-valid-id").Times(1).Return(db.Recipe{}, fmt.Errorf("failed to parse recipeID"))
+				store.EXPECT().DeleteRecipeByID(gomock.Any(), "not-valid-id").Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to no matching recipe for recipe ID",
+			id:   nonMatchingID,
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetRecipeByID(gomock.Any(), nonMatchingID).Times(1).Return(db.Recipe{}, fmt.Errorf("failed to find recipe"))
+				store.EXPECT().DeleteRecipeByID(gomock.Any(), "not-valid-id").Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)

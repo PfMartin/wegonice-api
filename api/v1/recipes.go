@@ -3,10 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/PfMartin/wegonice-api/db"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // listRecipes
@@ -158,6 +160,17 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 		return
 	}
 
+	existingRecipe, err := server.store.GetRecipeByID(ctx, uriParam.ID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to find recipe") {
+			NewErrorNotFound(err).Send(ctx)
+			return
+		}
+
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
 	modifiedCount, err := server.store.UpdateRecipeByID(ctx, uriParam.ID, recipePatch)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
@@ -169,7 +182,11 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Delete previous image
+	imagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingRecipe.ImageName)
+
+	if err = os.Remove(imagePath); err != nil {
+		log.Err(err).Msgf("failed to delete image in path: %s", imagePath)
+	}
 
 	ctx.Status(http.StatusOK)
 }
@@ -196,17 +213,27 @@ func (server *Server) deleteRecipeByID(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Delete image
+	existingRecipe, err := server.store.GetRecipeByID(ctx, uriParam.ID)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to find recipe") {
+			NewErrorNotFound(err).Send(ctx)
+			return
+		}
 
-	deleteCount, err := server.store.DeleteRecipeByID(ctx, uriParam.ID)
+		NewErrorBadRequest(err).Send(ctx)
+		return
+	}
+
+	_, err = server.store.DeleteRecipeByID(ctx, uriParam.ID)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
 
-	if deleteCount < 1 {
-		NewErrorNotFound(fmt.Errorf("could not find recipe with recipeId: %s", uriParam.ID)).Send(ctx)
-		return
+	imagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingRecipe.ImageName)
+
+	if err = os.Remove(imagePath); err != nil {
+		log.Err(err).Msgf("failed to delete image in path: %s", imagePath)
 	}
 
 	ctx.Status(http.StatusOK)

@@ -387,6 +387,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 				"imageName":    fullAuthorPatch.ImageName,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(1).Return(author, nil)
 				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, fullAuthorPatch).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -401,6 +402,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 				"firstName": fullAuthorPatch.FirstName,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(1).Return(author, nil)
 				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{
 					Name:      fullAuthorPatch.Name,
 					FirstName: fullAuthorPatch.FirstName,
@@ -417,9 +419,8 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 				"name": fullAuthorPatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{
-					Name: fullAuthorPatch.Name,
-				}).Times(0)
+				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(0)
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -430,6 +431,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			id:   author.ID,
 			body: gin.H{},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(0)
 				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{}).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -443,9 +445,8 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 				"name": fullAuthorPatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().UpdateAuthorByID(gomock.Any(), "not-valid-id", db.AuthorUpdate{
-					Name: fullAuthorPatch.Name,
-				}).Times(1).Return(int64(0), fmt.Errorf("failed to parse authorID"))
+				store.EXPECT().GetAuthorByID(gomock.Any(), "not-valid-id").Times(1).Return(db.Author{}, fmt.Errorf("failed to parse authorID"))
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), "not-valid-id", gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -458,9 +459,10 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 				"name": fullAuthorPatch.Name,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), nonMatchingID).Times(1).Return(db.Author{}, fmt.Errorf("failed to find author"))
 				store.EXPECT().UpdateAuthorByID(gomock.Any(), nonMatchingID, db.AuthorUpdate{
 					Name: fullAuthorPatch.Name,
-				}).Times(1).Return(int64(0), nil)
+				}).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -498,6 +500,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 func TestUnitDeleteAuthorByID(t *testing.T) {
 	user, _ := randomUser(t)
 	author, _ := randomAuthor(t)
+	nonMatchingID := primitive.NewObjectID().Hex()
 
 	testCases := []struct {
 		name          string
@@ -509,6 +512,7 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 			name: "Success deleting the author",
 			id:   author.ID,
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(1).Return(author, nil)
 				store.EXPECT().DeleteAuthorByID(gomock.Any(), author.ID).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -519,6 +523,7 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 			name: "Fail due to missing id",
 			id:   "",
 			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), "").Times(0)
 				store.EXPECT().DeleteAuthorByID(gomock.Any(), "").Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -526,10 +531,22 @@ func TestUnitDeleteAuthorByID(t *testing.T) {
 			},
 		},
 		{
-			name: "Fail due author id not matching an authors in the database",
-			id:   "not-existing",
+			name: "Fail due to the provided authorID not being valid",
+			id:   "not-valid-id",
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().DeleteAuthorByID(gomock.Any(), "not-existing").Times(1).Return(int64(0), nil)
+				store.EXPECT().GetAuthorByID(gomock.Any(), "not-valid-id").Times(1).Return(db.Author{}, fmt.Errorf("failed to parse authorID"))
+				store.EXPECT().DeleteAuthorByID(gomock.Any(), "not-valid-id").Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "Fail due to no matching author for author ID",
+			id:   nonMatchingID,
+			buildStubs: func(store *mock_db.MockDBStore) {
+				store.EXPECT().GetAuthorByID(gomock.Any(), nonMatchingID).Times(1).Return(db.Author{}, fmt.Errorf("failed to find author"))
+				store.EXPECT().DeleteAuthorByID(gomock.Any(), "not-valid-id").Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)

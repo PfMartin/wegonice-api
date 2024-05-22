@@ -148,6 +148,16 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 		return
 	}
 
+	if authorPatch.FirstName == "" &&
+		authorPatch.LastName == "" &&
+		authorPatch.Name == "" &&
+		authorPatch.WebsiteURL == "" &&
+		authorPatch.InstagramURL == "" &&
+		authorPatch.ImageName == "" {
+		NewErrorBadRequest(fmt.Errorf("missing author patch")).Send(ctx)
+		return
+	}
+
 	if (authorPatch == db.AuthorUpdate{}) {
 		NewErrorBadRequest(fmt.Errorf("missing author patch")).Send(ctx)
 		return

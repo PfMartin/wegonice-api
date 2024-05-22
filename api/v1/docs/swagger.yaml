@@ -30,7 +30,7 @@ definitions:
         example: 5
         type: integer
       userCreated:
-        $ref: '#/definitions/api.UserResponse'
+        $ref: '#/definitions/UserResponse'
       userId:
         example: 660c4b99bc1bc4aabe3e6cd1
         type: string
@@ -157,6 +157,54 @@ definitions:
         example: Unauthorized
         type: string
     type: object
+  RecipeResponse:
+    properties:
+      author:
+        $ref: '#/definitions/AuthorResponse'
+      authorId:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      category:
+        allOf:
+        - $ref: '#/definitions/db.Category'
+        example: breakfast
+      createdAt:
+        example: 1714462120
+        type: integer
+      id:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+      imageName:
+        example: Pancakes.png
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/db.Ingredient'
+        type: array
+      modifiedAt:
+        example: 1714462120
+        type: integer
+      name:
+        example: Pancakes
+        type: string
+      prepSteps:
+        items:
+          $ref: '#/definitions/db.PrepStep'
+        type: array
+      recipeUrl:
+        example: https://www.allthepancakes.com/pancakes
+        type: string
+      timeM:
+        example: 30
+        type: integer
+      userCreated:
+        $ref: '#/definitions/UserResponse'
+      userId:
+        example: 660c4b99bc1bc4aabe126cd1
+        type: string
+    required:
+    - authorId
+    type: object
   RecipeToCreate:
     properties:
       authorId:
@@ -224,55 +272,7 @@ definitions:
         example: 30
         type: integer
     type: object
-  api.RecipeResponse:
-    properties:
-      author:
-        $ref: '#/definitions/AuthorResponse'
-      authorId:
-        example: 660c4b99bc1bc4aabe126cd1
-        type: string
-      category:
-        allOf:
-        - $ref: '#/definitions/db.Category'
-        example: breakfast
-      createdAt:
-        example: 1714462120
-        type: integer
-      id:
-        example: 660c4b99bc1bc4aabe126cd1
-        type: string
-      imageName:
-        example: Pancakes.png
-        type: string
-      ingredients:
-        items:
-          $ref: '#/definitions/db.Ingredient'
-        type: array
-      modifiedAt:
-        example: 1714462120
-        type: integer
-      name:
-        example: Pancakes
-        type: string
-      prepSteps:
-        items:
-          $ref: '#/definitions/db.PrepStep'
-        type: array
-      recipeUrl:
-        example: https://www.allthepancakes.com/pancakes
-        type: string
-      timeM:
-        example: 30
-        type: integer
-      userCreated:
-        $ref: '#/definitions/api.UserResponse'
-      userId:
-        example: 660c4b99bc1bc4aabe126cd1
-        type: string
-    required:
-    - authorId
-    type: object
-  api.UserResponse:
+  UserResponse:
     properties:
       createdAt:
         example: 1714462120
@@ -707,6 +707,86 @@ paths:
       summary: Check heartbeat
       tags:
       - heartbeat
+  /images:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Saves an image to the filesystem. Send a request with
+        `const formData = new FormData();`
+        `formData.append('image', image);`
+        Add the header `'ContentType': 'multipart/form-data';`
+      operationId: images-save
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: Number of elements in one page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Saves an image
+      tags:
+      - images
+  /images/{imageName}:
+    get:
+      consumes:
+      - application/json
+      description: Gets an image with the given image name from the file system
+      operationId: images-get
+      parameters:
+      - description: Authorization header for bearer token
+        in: header
+        name: authorization
+        type: string
+      - description: Number of elements in one page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Image for the given image name
+          schema:
+            items:
+              type: integer
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorBadRequest'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorUnauthorized'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorInternalServerError'
+      summary: Gets an image
+      tags:
+      - images
   /recipes:
     get:
       consumes:
@@ -735,7 +815,7 @@ paths:
           description: List of recipes matching the given pagination parameters
           schema:
             items:
-              $ref: '#/definitions/api.RecipeResponse'
+              $ref: '#/definitions/RecipeResponse'
             type: array
         "400":
           description: Bad Request
@@ -847,7 +927,7 @@ paths:
         "200":
           description: Recipe that matches the ID
           schema:
-            $ref: '#/definitions/api.RecipeResponse'
+            $ref: '#/definitions/RecipeResponse'
         "400":
           description: Bad Request
           schema:

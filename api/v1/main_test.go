@@ -27,6 +27,7 @@ func newTestServer(t *testing.T, store db.DBStore) *Server {
 		APIURL:               "localhost:8001",
 		APIBasePath:          "/api/v1",
 		CorsAllowedOrigins:   []string{"http://*", "https://*"},
+		ImagesDepotPath:      "./images",
 	}
 
 	server := NewServer(
@@ -37,6 +38,7 @@ func newTestServer(t *testing.T, store db.DBStore) *Server {
 		config.AccessTokenDuration,
 		config.RefreshTokenDuration,
 		config.CorsAllowedOrigins,
+		config.ImagesDepotPath,
 	)
 
 	return server

@@ -70,6 +70,7 @@ func main() {
 		conf.AccessTokenDuration.Abs(),
 		conf.RefreshTokenDuration.Abs(),
 		conf.CorsAllowedOrigins,
+		conf.ImagesDepotPath,
 	)
 	if err = server.Start(); err != nil {
 		log.Err(err).Msg("failed to start server")

@@ -162,6 +162,8 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: Delete image
+
 	ctx.Status(http.StatusOK)
 }
 
@@ -186,6 +188,8 @@ func (server *Server) deleteAuthorByID(ctx *gin.Context) {
 		NewErrorBadRequest(err).Send(ctx)
 		return
 	}
+
+	// TODO: Delete image
 
 	deleteCount, err := server.store.DeleteAuthorByID(ctx, uriParam.ID)
 	if err != nil {

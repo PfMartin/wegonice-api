@@ -19,6 +19,7 @@ type Config struct {
 	APIURL               string        `mapstructure:"API_URL"`
 	APIBasePath          string        `mapstructure:"API_BASE_PATH"`
 	APIVersion           string        `mapstructure:"API_VERSION"`
+	ImagesDepotPath      string        `mapstructure:"IMAGES_DEPOT_PATH"`
 	CorsAllowedOrigins   []string      `mapstructure:"CORS_ALLOWED_ORIGINS"`
 }
 

@@ -25,6 +25,7 @@ type ServerConfig struct {
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	corsAllowedOrigins   []string
+	imagesDepotPath      string
 }
 
 func NewServer(
@@ -35,6 +36,7 @@ func NewServer(
 	accessTokenDuration time.Duration,
 	refreshTokenDuration time.Duration,
 	corsAllowedOrigins []string,
+	imagesDepotPath string,
 ) *Server {
 	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
 	if err != nil {
@@ -48,6 +50,7 @@ func NewServer(
 		accessTokenDuration:  accessTokenDuration,
 		refreshTokenDuration: refreshTokenDuration,
 		corsAllowedOrigins:   corsAllowedOrigins,
+		imagesDepotPath:      imagesDepotPath,
 	}
 
 	server := &Server{
@@ -92,6 +95,11 @@ func (server *Server) setupRoutes() {
 	recipeRoutes.GET("/:id", server.getRecipeByID)
 	recipeRoutes.PATCH("/:id", server.patchRecipeByID)
 	recipeRoutes.DELETE("/:id", server.deleteRecipeByID)
+
+	imagesRoutes := v1Routes.Group("/images")
+	imagesRoutes.Use(authMiddleware(server.tokenMaker))
+	imagesRoutes.POST("", server.SaveImage)
+	imagesRoutes.GET("/:imageName", server.GetImage)
 
 	server.router = router
 }

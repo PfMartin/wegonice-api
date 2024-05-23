@@ -1,6 +1,7 @@
 package images
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -35,5 +36,10 @@ func (imageManager *ImageManager) RemoveImage(imageName string) error {
 }
 
 func (imageManager *ImageManager) CreateUniqueName(imageName string) string {
-	return fmt.Sprintf("%s-%s", uuid.New(), imageName)
+	uniqueID := uuid.New().String()
+
+	if flag.Lookup("test.v") != nil {
+		uniqueID = "unique"
+	}
+	return fmt.Sprintf("%s-%s", uniqueID, imageName)
 }

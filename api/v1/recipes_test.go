@@ -318,6 +318,7 @@ func TestUnitCreateRecipe(t *testing.T) {
 				"userId":      recipe.UserID,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
+				recipe.ImageName = "unique-" + recipe.ImageName
 				store.EXPECT().CreateRecipe(gomock.Any(), db.RecipeToCreate{
 					Name:        recipe.Name,
 					ImageName:   recipe.ImageName,
@@ -490,6 +491,8 @@ func TestUnitPatchRecipeByID(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().GetRecipeByID(gomock.Any(), recipe.ID).Times(1).Return(recipe, nil)
+
+				fullRecipePatch.ImageName = "unique-" + fullRecipePatch.ImageName
 				store.EXPECT().UpdateRecipeByID(gomock.Any(), recipe.ID, fullRecipePatch).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {

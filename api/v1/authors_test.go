@@ -251,6 +251,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 				"name":      author.Name,
 				"firstName": author.FirstName,
 				"lastName":  author.LastName,
+				"imageName": author.ImageName,
 				"userId":    author.UserID,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
@@ -258,6 +259,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 					Name:      author.Name,
 					FirstName: author.FirstName,
 					LastName:  author.LastName,
+					ImageName: "unique-" + author.ImageName,
 					UserID:    author.UserID,
 				}).Times(1).Return(primitiveID, nil)
 			},
@@ -273,12 +275,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 				"userId":    author.UserID,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
-					Name:      author.Name,
-					FirstName: author.FirstName,
-					LastName:  author.LastName,
-					UserID:    author.UserID,
-				}).Times(0)
+				store.EXPECT().CreateAuthor(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -292,12 +289,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 				"lastName":  author.LastName,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
-				store.EXPECT().CreateAuthor(gomock.Any(), db.AuthorToCreate{
-					Name:      author.Name,
-					FirstName: author.FirstName,
-					LastName:  author.LastName,
-					UserID:    author.UserID,
-				}).Times(0)
+				store.EXPECT().CreateAuthor(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -309,6 +301,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 				"name":      author.Name,
 				"firstName": author.FirstName,
 				"lastName":  author.LastName,
+				"imageName": author.ImageName,
 				"userId":    author.UserID,
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
@@ -316,6 +309,7 @@ func TestUnitCreateAuthor(t *testing.T) {
 					Name:      author.Name,
 					FirstName: author.FirstName,
 					LastName:  author.LastName,
+					ImageName: "unique-" + author.ImageName,
 					UserID:    author.UserID,
 				}).Times(1).Return(primitive.NilObjectID, fmt.Errorf("author with name %s already exists", author.Name))
 			},
@@ -388,6 +382,8 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(1).Return(author, nil)
+
+				fullAuthorPatch.ImageName = "unique-" + fullAuthorPatch.ImageName
 				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, fullAuthorPatch).Times(1).Return(int64(1), nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -432,7 +428,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			body: gin.H{},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().GetAuthorByID(gomock.Any(), author.ID).Times(0)
-				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, db.AuthorUpdate{}).Times(0)
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), author.ID, gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -460,9 +456,7 @@ func TestUnitPatchAuthorByID(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockDBStore) {
 				store.EXPECT().GetAuthorByID(gomock.Any(), nonMatchingID).Times(1).Return(db.Author{}, fmt.Errorf("failed to find author"))
-				store.EXPECT().UpdateAuthorByID(gomock.Any(), nonMatchingID, db.AuthorUpdate{
-					Name: fullAuthorPatch.Name,
-				}).Times(0)
+				store.EXPECT().UpdateAuthorByID(gomock.Any(), nonMatchingID, gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)

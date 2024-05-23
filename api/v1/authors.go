@@ -67,6 +67,10 @@ func (server *Server) createAuthor(ctx *gin.Context) {
 		return
 	}
 
+	if authorBody.ImageName != "" {
+		authorBody.ImageName = server.imageManager.CreateUniqueName(authorBody.ImageName)
+	}
+
 	authorID, err := server.store.CreateAuthor(ctx, authorBody)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "author with name") { // TODO: Find better way to check error types (enum?)
@@ -171,6 +175,10 @@ func (server *Server) patchAuthorByID(ctx *gin.Context) {
 
 		NewErrorBadRequest(err).Send(ctx)
 		return
+	}
+
+	if authorPatch.ImageName != "" {
+		authorPatch.ImageName = server.imageManager.CreateUniqueName(authorPatch.ImageName)
 	}
 
 	modifiedCount, err := server.store.UpdateAuthorByID(ctx, uriParam.ID, authorPatch)

@@ -67,6 +67,10 @@ func (server *Server) createRecipe(ctx *gin.Context) {
 		return
 	}
 
+	if recipeBody.ImageName != "" {
+		recipeBody.ImageName = server.imageManager.CreateUniqueName(recipeBody.ImageName)
+	}
+
 	recipeID, err := server.store.CreateRecipe(ctx, recipeBody)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "recipe with name") { // TODO: Find better way to check error types (enum?)
@@ -168,6 +172,10 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 
 		NewErrorBadRequest(err).Send(ctx)
 		return
+	}
+
+	if recipePatch.ImageName != "" {
+		recipePatch.ImageName = server.imageManager.CreateUniqueName(recipePatch.ImageName)
 	}
 
 	modifiedCount, err := server.store.UpdateRecipeByID(ctx, uriParam.ID, recipePatch)

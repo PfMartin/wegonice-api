@@ -3,6 +3,7 @@ package images
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type ImageManager struct {
@@ -10,8 +11,14 @@ type ImageManager struct {
 }
 
 func NewImageManager(imagesDepotPath string) *ImageManager {
+	fixedPath := imagesDepotPath
+
+	if strings.HasSuffix(imagesDepotPath, "/") {
+		fixedPath = fixedPath[:len(imagesDepotPath)-1]
+	}
+
 	return &ImageManager{
-		imagesDepotPath: imagesDepotPath,
+		imagesDepotPath: fixedPath,
 	}
 }
 

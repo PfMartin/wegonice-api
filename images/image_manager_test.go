@@ -7,6 +7,7 @@ import (
 	"image/png"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -79,7 +80,7 @@ func TestUnitGetImagePath(t *testing.T) {
 	require.Equal(t, "test_path/"+fileName, imageManager.GetImagePath(fileName))
 }
 
-func TestUnitRemoveImage(t *testing.T) {
+func TestRemoveImage(t *testing.T) {
 	testImageName := "unit_test_image.png"
 
 	testCases := []struct {
@@ -103,6 +104,7 @@ func TestUnitRemoveImage(t *testing.T) {
 			filePath := fmt.Sprintf("%s/%s", imageManager.imagesDepotPath, testImageName)
 			if tc.fileExists {
 				CreateImage(t, filePath)
+				time.Sleep(1 * time.Second)
 				require.NoError(t, imageManager.RemoveImage(testImageName))
 			} else {
 				require.Error(t, imageManager.RemoveImage(testImageName))

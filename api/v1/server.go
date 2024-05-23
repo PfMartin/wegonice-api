@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/PfMartin/wegonice-api/db"
+	"github.com/PfMartin/wegonice-api/images"
 	"github.com/PfMartin/wegonice-api/token"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,10 +14,11 @@ import (
 )
 
 type Server struct {
-	config     ServerConfig
-	store      db.DBStore
-	tokenMaker token.Maker
-	router     *gin.Engine
+	config       ServerConfig
+	store        db.DBStore
+	tokenMaker   token.Maker
+	router       *gin.Engine
+	imageManager images.ImageManager
 }
 
 type ServerConfig struct {
@@ -25,7 +27,6 @@ type ServerConfig struct {
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	corsAllowedOrigins   []string
-	imagesDepotPath      string
 }
 
 func NewServer(
@@ -44,19 +45,21 @@ func NewServer(
 		return nil
 	}
 
+	imageManager := images.NewImageManager(imagesDepotPath)
+
 	config := ServerConfig{
 		url:                  url,
 		basePath:             basePath,
 		accessTokenDuration:  accessTokenDuration,
 		refreshTokenDuration: refreshTokenDuration,
 		corsAllowedOrigins:   corsAllowedOrigins,
-		imagesDepotPath:      imagesDepotPath,
 	}
 
 	server := &Server{
-		config:     config,
-		store:      store,
-		tokenMaker: tokenMaker,
+		config:       config,
+		store:        store,
+		tokenMaker:   tokenMaker,
+		imageManager: *imageManager,
 	}
 
 	server.setupRoutes()

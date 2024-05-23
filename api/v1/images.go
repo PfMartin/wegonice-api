@@ -32,7 +32,7 @@ var allowedFileTypes = []string{".png", ".jpg"}
 // @Failure			401						{object}		ErrorUnauthorized					"Unauthorized"
 // @Failure 		500						{object}		ErrorInternalServerError	"Internal Server Error"
 // @Router			/images				[post]
-func (s *Server) SaveImage(ctx *gin.Context) {
+func (server *Server) SaveImage(ctx *gin.Context) {
 	file, err := ctx.FormFile(createFormFileName)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
@@ -46,7 +46,7 @@ func (s *Server) SaveImage(ctx *gin.Context) {
 		return
 	}
 
-	destination := fmt.Sprintf("%s/%s", s.config.imagesDepotPath, file.Filename)
+	destination := server.imageManager.GetImagePath(file.Filename)
 
 	if err = ctx.SaveUploadedFile(file, destination); err != nil {
 		NewErrorInternalServerError(err).Send(ctx)
@@ -71,7 +71,7 @@ func (s *Server) SaveImage(ctx *gin.Context) {
 // @Failure			401									{object}		ErrorUnauthorized					"Unauthorized"
 // @Failure 		500									{object}		ErrorInternalServerError	"Internal Server Error"
 // @Router			/images/{imageName}	[get]
-func (s *Server) GetImage(ctx *gin.Context) {
+func (server *Server) GetImage(ctx *gin.Context) {
 	type imageNameURI struct {
 		Name string `uri:"imageName" binding:"required"`
 	}
@@ -82,7 +82,7 @@ func (s *Server) GetImage(ctx *gin.Context) {
 		return
 	}
 
-	filePath := fmt.Sprintf("%s/%s", s.config.imagesDepotPath, imageName.Name)
+	filePath := server.imageManager.GetImagePath(imageName.Name)
 
 	ctx.File(filePath)
 }

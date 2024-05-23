@@ -24,12 +24,12 @@ func TestUnitSaveImage(t *testing.T) {
 	}{
 		{
 			name:         "Success with .png file",
-			filename:     "testImage.png",
+			filename:     "test_image.png",
 			responseCode: http.StatusOK,
 		},
 		{
 			name:         "Success with .jpg file",
-			filename:     "testImage.jpg",
+			filename:     "test_image.jpg",
 			responseCode: http.StatusOK,
 		},
 	}
@@ -40,7 +40,7 @@ func TestUnitSaveImage(t *testing.T) {
 
 			w := multipart.NewWriter(&buf)
 
-			testImagePath := fmt.Sprintf("./testImages/%s", tc.filename)
+			testImagePath := fmt.Sprintf("../../images/test_images/%s", tc.filename)
 
 			file, err := os.Open(testImagePath)
 			require.NoError(t, err)
@@ -85,12 +85,12 @@ func TestUnitServeImage(t *testing.T) {
 	}{
 		{
 			name:         "Success with .png image",
-			imageName:    "testImage.png",
+			imageName:    "test_image.png",
 			responseCode: http.StatusOK,
 		},
 		{
 			name:         "Success with .jpg image",
-			imageName:    "testImage.jpg",
+			imageName:    "test_image.jpg",
 			responseCode: http.StatusOK,
 		},
 		{

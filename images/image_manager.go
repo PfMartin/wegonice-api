@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type ImageManager struct {
@@ -30,4 +32,8 @@ func (imageManager *ImageManager) RemoveImage(imageName string) error {
 	imagePath := imageManager.GetImagePath(imageName)
 
 	return os.Remove(imagePath)
+}
+
+func (imageManager *ImageManager) CreateUniqueName(imageName string) string {
+	return fmt.Sprintf("%s-%s", uuid.New(), imageName)
 }

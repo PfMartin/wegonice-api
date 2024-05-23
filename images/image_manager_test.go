@@ -37,8 +37,10 @@ func CreateImage(t *testing.T, imagePath string) {
 		}
 	}
 
-	f, _ := os.Create(imagePath)
-	png.Encode(f, img)
+	f, err := os.Create(imagePath)
+	require.NoError(t, err)
+	err = png.Encode(f, img)
+	require.NoError(t, err)
 }
 
 func TestUnitNewImageManager(t *testing.T) {

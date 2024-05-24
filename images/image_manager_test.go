@@ -101,7 +101,7 @@ func TestRemoveImage(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			imageManager := NewImageManager("./test_images_depot")
 			if _, err := os.Stat(imageManager.imagesDepotPath); os.IsNotExist(err) {
-				err = os.MkdirAll(imageManager.imagesDepotPath, 0700) // Create your file
+				err = os.MkdirAll(imageManager.imagesDepotPath, 0700)
 				require.NoError(t, err)
 			}
 

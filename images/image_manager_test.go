@@ -45,7 +45,7 @@ func CreateImage(t *testing.T, imagePath string) {
 }
 
 func TestUnitNewImageManager(t *testing.T) {
-	testPath := "test_depot"
+	testPath := "test_images_depot"
 
 	testCases := []struct {
 		name            string
@@ -65,7 +65,9 @@ func TestUnitNewImageManager(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			imageManager := NewImageManager(tc.imagesDepotPath)
 
-			require.Equal(t, "test_depot", imageManager.imagesDepotPath)
+			require.Equal(t, testPath, imageManager.imagesDepotPath)
+			_, err := os.Stat(testPath)
+			require.NoError(t, err)
 		})
 	}
 }
@@ -100,10 +102,6 @@ func TestRemoveImage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			imageManager := NewImageManager("./test_images_depot")
-			if _, err := os.Stat(imageManager.imagesDepotPath); os.IsNotExist(err) {
-				err = os.MkdirAll(imageManager.imagesDepotPath, 0700)
-				require.NoError(t, err)
-			}
 
 			filePath := fmt.Sprintf("%s/%s", imageManager.imagesDepotPath, testImageName)
 			if tc.fileExists {

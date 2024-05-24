@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/google/uuid"
 )
 
@@ -18,6 +20,13 @@ func NewImageManager(imagesDepotPath string) *ImageManager {
 
 	if strings.HasSuffix(imagesDepotPath, "/") {
 		fixedPath = fixedPath[:len(imagesDepotPath)-1]
+	}
+
+	if _, err := os.Stat(fixedPath); os.IsNotExist(err) {
+		err = os.MkdirAll(fixedPath, os.ModePerm)
+		if err != nil {
+			log.Fatal().Msgf("Failed to create image depot path: %s", err)
+		}
 	}
 
 	return &ImageManager{

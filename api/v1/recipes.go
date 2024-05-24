@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/PfMartin/wegonice-api/db"
@@ -66,6 +65,10 @@ func (server *Server) createRecipe(ctx *gin.Context) {
 		fmt.Println(err)
 		NewErrorBadRequest(err).Send(ctx)
 		return
+	}
+
+	if recipeBody.ImageName != "" {
+		recipeBody.ImageName = server.imageManager.CreateUniqueName(recipeBody.ImageName)
 	}
 
 	recipeID, err := server.store.CreateRecipe(ctx, recipeBody)
@@ -171,6 +174,10 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 		return
 	}
 
+	if recipePatch.ImageName != "" {
+		recipePatch.ImageName = server.imageManager.CreateUniqueName(recipePatch.ImageName)
+	}
+
 	modifiedCount, err := server.store.UpdateRecipeByID(ctx, uriParam.ID, recipePatch)
 	if err != nil {
 		NewErrorBadRequest(err).Send(ctx)
@@ -182,10 +189,8 @@ func (server *Server) patchRecipeByID(ctx *gin.Context) {
 		return
 	}
 
-	imagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingRecipe.ImageName)
-
-	if err = os.Remove(imagePath); err != nil {
-		log.Err(err).Msgf("failed to delete image in path: %s", imagePath)
+	if err = server.imageManager.RemoveImage(existingRecipe.ImageName); err != nil {
+		log.Err(err).Msgf("failed to delete image: %s", existingRecipe.ImageName)
 	}
 
 	ctx.Status(http.StatusOK)
@@ -230,10 +235,8 @@ func (server *Server) deleteRecipeByID(ctx *gin.Context) {
 		return
 	}
 
-	imagePath := fmt.Sprintf("%s/%s", server.config.imagesDepotPath, existingRecipe.ImageName)
-
-	if err = os.Remove(imagePath); err != nil {
-		log.Err(err).Msgf("failed to delete image in path: %s", imagePath)
+	if err = server.imageManager.RemoveImage(existingRecipe.ImageName); err != nil {
+		log.Err(err).Msgf("failed to delete image: %s", existingRecipe.ImageName)
 	}
 
 	ctx.Status(http.StatusOK)

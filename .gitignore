@@ -22,4 +22,5 @@ go.work
 
 db/db-data/
 
-images/
+images/test_images_depot/
+images_depot/

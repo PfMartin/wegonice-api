@@ -27,7 +27,7 @@ func newTestServer(t *testing.T, store db.DBStore) *Server {
 		APIURL:               "localhost:8001",
 		APIBasePath:          "/api/v1",
 		CorsAllowedOrigins:   []string{"http://*", "https://*"},
-		ImagesDepotPath:      "./images",
+		ImagesDepotPath:      "../../images/test_images_depot",
 	}
 
 	server := NewServer(

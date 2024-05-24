@@ -100,6 +100,9 @@ func TestRemoveImage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			imageManager := NewImageManager("./test_images_depot")
+			if _, err := os.Stat(imageManager.imagesDepotPath); os.IsNotExist(err) {
+				os.MkdirAll(imageManager.imagesDepotPath, 0700) // Create your file
+			}
 
 			filePath := fmt.Sprintf("%s/%s", imageManager.imagesDepotPath, testImageName)
 			if tc.fileExists {

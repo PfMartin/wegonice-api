@@ -9,3 +9,10 @@ services:
       - /opt/wegonice-db/db-data:/data/db
     ports:
       - '27017-27019:27017-27019'
+  wegonice-api:
+    image: 'ghcr.io/pfmartin/wegonice-api:latest'
+    container_name: 'wegonice-api'
+    volumes:
+      - ./.env:/app/.env
+    ports:
+      - '8000:8000'
